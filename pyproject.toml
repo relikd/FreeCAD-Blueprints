@@ -1,0 +1,13 @@
+[project]
+name = "Blueprints"
+version = "0.9.0"
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = [
+    "freecad-stubs>=1.0.21",
+    "pyside6>=6.11.0",
+]
+
+[tool.zuban]
+python_version = "3.11"
