@@ -2,12 +2,15 @@
 Code related to Qt simplifications and shared UI componentes.
 '''
 import sys
-from typing import Callable
-
-from PySide import QtCore, QtGui, QtWidgets
+from typing import Callable, TYPE_CHECKING
 
 from .utils import RES_ROOT
 from .settings import Settings
+
+if TYPE_CHECKING:  # switch between "PySide6" (dev) and "PySide" (dist)
+    from PySide6 import QtCore, QtGui, QtWidgets
+else:
+    from PySide import QtCore, QtGui, QtWidgets
 
 __all__ = ['QtCore', 'QtGui', 'QtWidgets']
 
