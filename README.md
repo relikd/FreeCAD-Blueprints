@@ -4,7 +4,7 @@ Reduce repetetive work by loading pre-defined sketches from community collection
 
 For example, add a USB-C port (hole) to your electronics case in seconds. 
 
-[TODO: add usage animation]
+[![import sketch](doc/load-sketch.gif)](doc/load-sketch.mp4)
 
 
 ### About this project
