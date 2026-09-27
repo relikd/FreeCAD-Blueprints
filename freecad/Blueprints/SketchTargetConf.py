@@ -56,6 +56,8 @@ def _getSketcherSelection() -> 'tuple[Vector|None, GeoRef|None]':
     Nothing else – in all other cases return `None`.
     Assumes UI is already in Sketcher edit mode.
     '''
+    # TODO: fix 3d-point position if rotated
+    # TODO: fix select edge of external reference
     selection: list[SelectionObject] = FreeCADGui.Selection.getSelectionEx()
     if len(selection) != 1:
         return None, None
