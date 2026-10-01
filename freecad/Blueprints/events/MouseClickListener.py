@@ -133,18 +133,15 @@ def _current_sketcher_selection() -> UserSelection:
     pt = points[0] if points else None
     name = names[0]
 
-    if name.startswith('Edge'):
-        geoid = int(name.removeprefix('Edge')) - 1
-        return UserSelection(pt, GeoRef(geoid))
+    if geoid := _name_to_geoid(name, 'Edge'):
+        return UserSelection(pt, GeoRef(geoid[0]))
 
-    if name.startswith('ExternalEdge'):
-        geoid = int(name.removeprefix('ExternalEdge')) - 1
-        return UserSelection(pt, GeoRef(GeoId.RefExt - geoid))
+    if geoid := _name_to_geoid(name, 'ExternalEdge'):
+        return UserSelection(pt, GeoRef(GeoId.RefExt - geoid[0]))
 
-    if name.startswith('Vertex'):
-        geoid = int(name.removeprefix('Vertex')) - 1
+    if geoid := _name_to_geoid(name, 'Vertex'):
         sketch: Sketch = selection[0].Object
-        g, p = sketch.getGeoVertexIndex(geoid)
+        g, p = sketch.getGeoVertexIndex(geoid[0])
         return UserSelection(pt, GeoRef(g, p))  # type: ignore[arg-type]
 
     if name == 'H_Axis':
@@ -155,3 +152,11 @@ def _current_sketcher_selection() -> UserSelection:
         return UserSelection(pt, GeoRef(GeoId.HAxis, PointPos.start))
 
     return UserSelection(pt, None)
+
+
+def _name_to_geoid(name: str, prefix: str) -> 'tuple[int]|None':
+    ''' Helper to reduce boilerplate code. Tuple to allow walrus operator. '''
+    if name.startswith(prefix):
+        if num := name.removeprefix(prefix).strip():
+            return (int(num) - 1,)
+    return None
