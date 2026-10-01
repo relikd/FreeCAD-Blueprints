@@ -12,18 +12,17 @@ if TYPE_CHECKING:  # switch between "PySide6" (dev) and "PySide" (dist)
 else:
     from PySide import QtCore, QtGui, QtWidgets
 
-__all__ = ['QtCore', 'QtGui', 'QtWidgets']
-
 
 class Icon:
     @staticmethod
     def folder() -> QtGui.QIcon:
+        ''' Shown in file browser. Regular folder / directory icon. '''
         return QtWidgets.QApplication.style().standardIcon(
             QtWidgets.QStyle.StandardPixmap.SP_DirIcon)
 
     @staticmethod
     def freecad_file() -> QtGui.QPixmap:
-        # return _icon('freecad-document.svg')
+        ''' Shown in file browser. FreeCAD app icon for `.FCStd` files. '''
         return QtGui.QPixmap(RES_ROOT / 'icons' / 'freecad-document.svg')
 
 
