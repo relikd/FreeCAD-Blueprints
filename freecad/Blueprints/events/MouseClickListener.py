@@ -28,13 +28,13 @@ class MouseClickListener:
         sketch: 'Sketch',
         on_click: Callable[[UserSelection], None],
     ):
-        self.prev_pos: tuple[int, int] | None = None
         self.view = view
         self.sketch = sketch
         self.callback = on_click
         self.callback_id = self.view.addEventCallback(
             'SoMouseButtonEvent', self.on_mouse_event,
         )
+        self.prev_pos = (0, 0)
 
     def stop(self) -> None:
         ''' Stop all events and callbacks. Cleanup attrs. Single use! '''
@@ -62,9 +62,6 @@ class MouseClickListener:
     def is_pure_click(self, pos: tuple[int, int]) -> bool:
         ''' `False` if user moved cursor during click, e.g., rect select. '''
         prev = self.prev_pos
-        self.prev_pos = None
-        if not prev:
-            return True  # should never happen
         return (pos[0] - prev[0]) ** 2 + (pos[1] - prev[1]) ** 2 < 64
 
     # Internal methods
