@@ -15,8 +15,15 @@ if TYPE_CHECKING:
     from FreeCAD import Vector
 
 
+def _validate(sketch: 'Sketch') -> None:
+    ''' Ensure sketch is well-structured to avoid common mistakes. '''
+    if Constr.any(sketch.Constraints, GeoId.isExt):
+        Notify.warn('External reference found',
+                    'Blueprints cannot have references on external geometry.')
+
+
 @dataclass
-class SketchTargetConf:
+class BlueprintDuplicator:
     '''
     placement:
         Place blueprint at these coordinates (instead of origin).
@@ -32,48 +39,40 @@ class SketchTargetConf:
     constrainTo: 'GeoRef|None'
     allowRotate: bool = False
 
+    def copyTo(self, dst: 'Sketch', *, src: 'Sketch') -> None:
+        ''' Copy a sketch from one document to another. '''
+        # bounds = src.Shape.BoundBox
+        _validate(src)
 
-def _validate(sketch: 'Sketch') -> None:
-    ''' Ensure sketch is well-structured to avoid common mistakes. '''
-    if Constr.any(sketch.Constraints, GeoId.isExt):
-        Notify.warn('External reference found',
-                    'Blueprints cannot have references on external geometry.')
+        # where newly created geo ids start
+        # used to group everything which was created by this process
+        initial_geoid = dst.GeometryCount
 
+        # check if sketch contains references on any of the axes
+        # override original axis (if necessary) to allow translation
+        hasArtificialAxis = Constr.any(src.Constraints, GeoId.isAxis)
+        if hasArtificialAxis:
+            _V, _H = _createArtificialAxes(dst, self.placement)
+        else:
+            _V, _H = GeoId.HAxis, GeoId.VAxis
 
-def duplicateSketch(src: 'Sketch', dst: 'Sketch', conf: SketchTargetConf) \
-        -> None:
-    ''' Copy a sketch from one document to another. '''
-    # bounds = src.Shape.BoundBox
-    _validate(src)
+        # after (potential) artificial axis
+        # used to fix references when importing from other sketch
+        geoid_offset, cid_offset = dst.GeometryCount, dst.ConstraintCount
 
-    # where newly created geo ids start
-    # used to group everything which was created by this process
-    initial_geoid = dst.GeometryCount
+        _copy_geometry(src, dst, toPos=self.placement)
+        _copy_constraints(src, dst, geoid_offset, h_axis=_H, v_axis=_V)
+        _copy_expressions(src, dst, cid_start=cid_offset)
 
-    # check if sketch contains references on any of the axes
-    # override original axis (if necessary) to allow translation
-    hasArtificialAxis = Constr.any(src.Constraints, GeoId.isAxis)
-    if hasArtificialAxis:
-        _V, _H = _createArtificialAxes(dst, conf.placement)
-    else:
-        _V, _H = GeoId.HAxis, GeoId.VAxis
+        if self.allowRotate:
+            dst.removeAxesAlignment(
+                list(range(initial_geoid, dst.GeometryCount)))
 
-    # after (potential) artificial axis
-    # used to fix references when importing from other sketch
-    geoid_offset, cid_offset = dst.GeometryCount, dst.ConstraintCount
+        # solve at the end should be sufficient as we dont manipulate geometry
+        dst.solve()
 
-    _copy_geometry(src, dst, toPos=conf.placement)
-    _copy_constraints(src, dst, geoid_start=geoid_offset, h_axis=_H, v_axis=_V)
-    _copy_expressions(src, dst, cid_start=cid_offset)
-
-    if conf.allowRotate:
-        dst.removeAxesAlignment(list(range(initial_geoid, dst.GeometryCount)))
-
-    # a single solve at the end should be enough as we dont manipulate geometry
-    dst.solve()
-
-    if hasArtificialAxis and conf.constrainTo:
-        _constrain_origin(dst, origin=GeoRef.S(_H), toTarget=conf.constrainTo)
+        if hasArtificialAxis and self.constrainTo:
+            _constrain_origin(dst, GeoRef.S(_H), self.constrainTo)
 
 
 ############################################################

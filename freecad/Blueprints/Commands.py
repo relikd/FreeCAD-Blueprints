@@ -6,7 +6,7 @@ import FreeCADGui
 
 from .helper.notify import Notify
 from .BlueprintInserter import BlueprintInserter
-from .SketchLoader import chooseBlueprint
+from .BlueprintLoader import chooseBlueprint
 
 from typing import TYPE_CHECKING
 

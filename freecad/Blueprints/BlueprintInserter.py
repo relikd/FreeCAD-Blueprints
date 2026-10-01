@@ -4,7 +4,7 @@ from .events.ActionListener import ActionListener
 from .events.EscListener import EscListener
 from .events.MouseClickListener import MouseClickListener, UserSelection
 from .events.MouseCursorListener import MouseCursorListener
-from .SketchCopy import SketchTargetConf, duplicateSketch
+from .BlueprintDuplicator import BlueprintDuplicator
 
 from typing import TYPE_CHECKING, Callable
 
@@ -67,11 +67,11 @@ class BlueprintInserter:
         self.close()
 
     def did_click(self, sel: UserSelection) -> None:
-        conf = SketchTargetConf(sel.vec, sel.geo, allowRotate=False)
+        duplicator = BlueprintDuplicator(sel.vec, sel.geo, allowRotate=False)
         thisDoc = self.current.Document
         thisDoc.openTransaction('Insert Blueprint (Sketch)')
         try:
-            duplicateSketch(self.blueprint, self.current, conf)
+            duplicator.copyTo(self.current, src=self.blueprint)
             thisDoc.commitTransaction()
             FreeCADGui.Selection.clearSelection()
         except Exception:
