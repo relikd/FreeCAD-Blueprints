@@ -34,6 +34,8 @@ class Blueprints_Add_Cmd:
 
     def Activated(self) -> None:
         ''' Open sketch from another file. '''
+        BlueprintInserter.cancel_previous()
+
         thisDoc = FreeCAD.ActiveDocument
         if not thisDoc:
             Notify.err('No Active Document', 'No active document found.')

@@ -13,7 +13,16 @@ if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
 
 
+_SESSIONS: list['BlueprintInserter'] = []
+
+
 class BlueprintInserter:
+    @staticmethod
+    def cancel_previous() -> None:
+        ''' Cancel any previous insert session. '''
+        for prev in _SESSIONS:
+            prev.close()
+
     def __init__(self, current: 'Sketch', blueprint: 'Sketch', *,
                  on_close: Callable[[], None]) -> None:
         doc = FreeCADGui.ActiveDocument
@@ -22,6 +31,8 @@ class BlueprintInserter:
         view = doc.ActiveView
         if not view:
             raise RuntimeError('No active view')
+
+        _SESSIONS.append(self)
 
         self.current = current
         self.blueprint = blueprint
@@ -39,6 +50,7 @@ class BlueprintInserter:
         FreeCADGui.addDocumentObserver(self)
 
     def close(self, *, postponeCursorCleanup: bool = False) -> None:
+        _SESSIONS.remove(self)
         FreeCADGui.removeDocumentObserver(self)
         self.cursor_monitor.stop(cleanupLater=postponeCursorCleanup)
         self.click_monitor.stop()
