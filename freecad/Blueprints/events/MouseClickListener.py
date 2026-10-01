@@ -35,6 +35,7 @@ class MouseClickListener:
             'SoMouseButtonEvent', self.on_mouse_event,
         )
         self.prev_pos = (0, 0)
+        self.started_with_selection = False
 
     def stop(self) -> None:
         ''' Stop all events and callbacks. Cleanup attrs. Single use! '''
@@ -54,10 +55,17 @@ class MouseClickListener:
 
         if info.get('State') == 'DOWN':
             self.prev_pos = pos
+            self.started_with_selection = has_selection()
         elif info.get('State') == 'UP' and self.is_pure_click(pos):
             # delayed because `getSelectionEx` isnt populated yet
-            QtCore.QTimer.singleShot(0, lambda:
-                self.callback(self._selection(int(pos[0]), int(pos[1]))))
+            QtCore.QTimer.singleShot(0, lambda: self.did_click(*pos))
+
+    def did_click(self, x: int, y: int) -> None:
+        ''' Callback for mouse-UP events. '''
+        if self.started_with_selection:
+            FreeCADGui.Selection.clearSelection()
+        else:
+            self.callback(self._selection(x, y))
 
     def is_pure_click(self, pos: tuple[int, int]) -> bool:
         ''' `False` if user moved cursor during click, e.g., rect select. '''
@@ -111,6 +119,13 @@ class MouseClickListener:
 ##################################################
 # Helper
 ##################################################
+
+
+def has_selection() -> bool:
+    ''' Check if there is any geometry selected '''
+    rv: list[SelectionObject] = FreeCADGui.Selection.getSelectionEx()
+    return len(rv) == 1 and len(rv[0].SubElementNames) > 0
+
 
 def _current_sketcher_selection() -> UserSelection:
     '''
