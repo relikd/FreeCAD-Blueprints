@@ -29,9 +29,6 @@ class MouseCursorListener(QtCore.QObject):
         elif cleanupLater:
             _DelayedCursorReset(self.view, self.cursor.pixmap().cacheKey())
 
-        del self.view
-        del self.cursor
-
     @property
     def is_my_cursor(self) -> bool:
         return self.view.cursor().pixmap().cacheKey() \
