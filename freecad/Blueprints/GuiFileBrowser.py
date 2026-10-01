@@ -5,8 +5,6 @@ from pathlib import Path
 from dataclasses import dataclass
 from functools import cached_property
 
-import FreeCADGui
-
 from .helper.qt import QtCore, QtWidgets, MenuAction, Icon, QuickGui
 from .helper.settings import Settings
 from .helper.utils import get_user_collection, open_in_file_manager
@@ -151,7 +149,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
 
 class FileBrowser(QtWidgets.QDialog):
     def __init__(self, root_dir: Path):
-        super().__init__(FreeCADGui.getMainWindow())
+        super().__init__()
 
         self.setWindowTitle('Choose Blueprint')
         self.resize(*Settings.getWinSize('FileBrowser', (400, 550)))
@@ -209,9 +207,10 @@ class FileBrowser(QtWidgets.QDialog):
 
 def open_blueprint_browser() -> 'Path|None':
     root = get_user_collection()
-    # TODO: if possible, integrate as Task Panel inside Sketcher
     dialog = FileBrowser(root)
-    if dialog.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
+    if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
         if node := dialog.get_selected():
+            dialog.deleteLater()
             return node.path
+    dialog.deleteLater()
     return None

@@ -4,8 +4,6 @@ GUI code for sketch selection (if multiple Sketches per document).
 from dataclasses import dataclass
 from functools import cached_property
 
-import FreeCADGui
-
 from .helper.properties import Props
 from .helper.qt import QtCore, QtWidgets, QuickGui
 from .helper.settings import Settings
@@ -163,7 +161,7 @@ class ListWidget(QtWidgets.QListWidget):
 
 class ItemSelectionDialog(QtWidgets.QDialog):
     def __init__(self, choices: list[DataItem]) -> None:
-        super().__init__(FreeCADGui.getMainWindow())
+        super().__init__()
 
         self.setWindowTitle('Select item')
         self.resize(*Settings.getWinSize('SketchChoice', (650, 450)))
@@ -220,5 +218,7 @@ def open_sketch_chooser(sketches: 'list[Sketch]') -> 'Sketch|None':
 
     if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
         if selected := dialog.get_selected():
+            dialog.deleteLater()
             return sketches[selected.index]
+    dialog.deleteLater()
     return None
