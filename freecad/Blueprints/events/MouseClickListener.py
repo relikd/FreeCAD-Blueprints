@@ -121,7 +121,6 @@ def _current_sketcher_selection() -> UserSelection:
     Nothing else – in all other cases return `None`.
     Assumes UI is already in Sketcher edit mode.
     '''
-    # TODO: fix select edge of external reference
     selection: list[SelectionObject] = FreeCADGui.Selection.getSelectionEx()
     if len(selection) != 1:
         return UserSelection(None, None)
@@ -135,11 +134,17 @@ def _current_sketcher_selection() -> UserSelection:
     name = names[0]
 
     if name.startswith('Edge'):
-        return UserSelection(pt, GeoRef(int(name.removeprefix('Edge')) - 1))
+        geoid = int(name.removeprefix('Edge')) - 1
+        return UserSelection(pt, GeoRef(geoid))
+
+    if name.startswith('ExternalEdge'):
+        geoid = int(name.removeprefix('ExternalEdge')) - 1
+        return UserSelection(pt, GeoRef(GeoId.RefExt - geoid))
 
     if name.startswith('Vertex'):
+        geoid = int(name.removeprefix('Vertex')) - 1
         sketch: Sketch = selection[0].Object
-        g, p = sketch.getGeoVertexIndex(int(name.removeprefix('Vertex')) - 1)
+        g, p = sketch.getGeoVertexIndex(geoid)
         return UserSelection(pt, GeoRef(g, p))  # type: ignore[arg-type]
 
     if name == 'H_Axis':
