@@ -61,9 +61,9 @@ class BlueprintDuplicator:
         # used to fix references when importing from other sketch
         geoid_offset, cid_offset = dst.GeometryCount, dst.ConstraintCount
 
-        _copy_geometry(src, dst, toPos=self.placement)
-        _copy_constraints(src, dst, geoid_offset, h_axis=_H, v_axis=_V)
-        _copy_expressions(src, dst, cid_start=cid_offset)
+        _copy_geometry(src, dst, self.placement)
+        name_map = _copy_constraints(src, dst, geoid_offset, _H, _V)
+        _copy_expressions(src, dst, cid_offset, name_map)
 
         if self.allowRotate:
             dst.removeAxesAlignment(
@@ -115,13 +115,15 @@ def _copy_geometry(src: 'Sketch', dst: 'Sketch', toPos: 'Vector|None') -> None:
 
 def _copy_constraints(
     src: 'Sketch', dst: 'Sketch', geoid_start: int, h_axis: int, v_axis: int,
-) -> None:
+) -> dict[str, str]:
     '''
     Duplicate constraints. Offset geo-ids by `geoid_start`.
     Replace original axes with `h_axis` and `v_axis` respectively.
     (use `h_axis=GeoId.HAxis, v_axis=GeoId.VAxis` if no artificial axes exist)
+
+    Returns mapping for renamed constraints: `{old-name: new-name}`.
     '''
-    def fn(geoid: int) -> int:
+    def shift_index(geoid: int) -> int:
         if geoid >= 0:  # normal geometry
             return geoid_start + geoid
         if geoid == GeoId.HAxis:
@@ -130,32 +132,45 @@ def _copy_constraints(
             return v_axis
         return geoid
 
+    rv = {}
+    existing_names = {x.Name for x in dst.Constraints} - {''}
+
+    def shift_name(name: str) -> str:
+        for suffix in range(2, 999):
+            new_name = f'{name}_{suffix}'
+            if new_name not in existing_names:
+                rv[name] = new_name
+                existing_names.add(new_name)
+                return new_name
+        return name
+
     con_list = []
     for con in src.Constraints:
-        con.First = fn(con.First)
+        con.First = shift_index(con.First)
         if con.Second != GeoId.Undef:
-            con.Second = fn(con.Second)
+            con.Second = shift_index(con.Second)
         if con.Third != GeoId.Undef:
-            con.Third = fn(con.Third)
-        # TODO: if same name, increment as new name?
+            con.Third = shift_index(con.Third)
+        if con.Name in existing_names:
+            con.Name = shift_name(con.Name)
         con_list.append(con)
     dst.addConstraint(con_list)
     # dst.solve()  # no need, done at the end
+    return rv
 
 
-def _copy_expressions(src: 'Sketch', dst: 'Sketch', cid_start: int) -> None:
+def _copy_expressions(
+    src: 'Sketch', dst: 'Sketch', cid_start: int, name_map: dict[str, str],
+) -> None:
     ''' Duplicate expressions. Offset constraint indices by `cid_start`. '''
     for field, val in src.ExpressionEngine:
-        if field.startswith('Constraints['):
-            field = _re_index_expressions(field, cid_start)
-        elif field.startswith('.Constraints.'):
-            # TODO: if same name, increment as new name?
-            pass  # copy named constraint as is
+        if field.startswith(('Constraints[', '.Constraints.')):
+            dst.setExpression(
+                _re_index_expr(field, cid_start, name_map),
+                _re_index_expr(val, cid_start, name_map))
         else:
             Notify.Log.err(f'Unhandled expr variant: "{field}". '
                            'Please report this error on GitHub.')
-            continue
-        dst.setExpression(field, _re_index_expressions(val, cid_start))
 
 
 def _constrain_origin(dst: 'Sketch', origin: GeoRef, toTarget: GeoRef) -> None:
@@ -165,8 +180,13 @@ def _constrain_origin(dst: 'Sketch', origin: GeoRef, toTarget: GeoRef) -> None:
         dst.addConstraint(Constr.Coincident(toTarget, origin))
 
 
-rx_exp = re.compile(r'Constraints\[([0-9]+)\]')
+rx_expr_indexed = re.compile(r'Constraints\[([0-9]+)\]')
+rx_expr_named = re.compile(r'\.Constraints\.([a-zA-Z_]\w*)')
 
 
-def _re_index_expressions(exp: str, start: int) -> str:
-    return rx_exp.sub(lambda x: f'Constraints[{start + int(x.group(1))}]', exp)
+def _re_index_expr(exp: str, start: int, name_map: dict[str, str]) -> str:
+    ''' Shift indices for indexed- and named- constraints. '''
+    exp = rx_expr_indexed.sub(lambda x:
+        f'Constraints[{start + int(x.group(1))}]', exp)
+    return rx_expr_named.sub(lambda x:
+        '.Constraints.' + name_map.get(x.group(1), x.group(1)), exp)
