@@ -28,6 +28,7 @@ class MouseClickListener:
         sketch: 'Sketch',
         on_click: Callable[[UserSelection], None],
     ):
+        self.prev_pos: tuple[int, int] | None = None
         self.view = view
         self.sketch = sketch
         self.callback = on_click
@@ -44,15 +45,27 @@ class MouseClickListener:
         del self.view
 
     def on_mouse_event(self, info: dict) -> None:
-        # TODO: abort if range selection
-        if info.get('Button') != 'BUTTON1' or info.get('State') != 'UP':
+        if info.get('Button') != 'BUTTON1':
             return
         pos = info.get('Position')
         if not isinstance(pos, tuple):
             return
-        # delayed because `getSelectionEx` isnt populated yet
-        QtCore.QTimer.singleShot(0, lambda:
-            self.callback(self._selection(int(pos[0]), int(pos[1]))))
+        pos = int(pos[0]), int(pos[1])
+
+        if info.get('State') == 'DOWN':
+            self.prev_pos = pos
+        elif info.get('State') == 'UP' and self.is_pure_click(pos):
+            # delayed because `getSelectionEx` isnt populated yet
+            QtCore.QTimer.singleShot(0, lambda:
+                self.callback(self._selection(int(pos[0]), int(pos[1]))))
+
+    def is_pure_click(self, pos: tuple[int, int]) -> bool:
+        ''' `False` if user moved cursor during click, e.g., rect select. '''
+        prev = self.prev_pos
+        self.prev_pos = None
+        if not prev:
+            return True  # should never happen
+        return (pos[0] - prev[0]) ** 2 + (pos[1] - prev[1]) ** 2 < 64
 
     # Internal methods
 
