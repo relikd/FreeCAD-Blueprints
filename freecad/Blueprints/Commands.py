@@ -5,9 +5,8 @@ import FreeCAD
 import FreeCADGui
 
 from .helper.notify import Notify
-from .SketchCopy import duplicateSketch
+from .BlueprintInserter import BlueprintInserter
 from .SketchLoader import chooseBlueprint
-from .SketchTargetConf import SketchTargetConf
 
 from typing import TYPE_CHECKING
 
@@ -46,19 +45,11 @@ class Blueprints_Add_Cmd:
                        'Open a sketch in edit mode, then try again.')
             return
 
-        # save current selection / UI state before `chooseBlueprint()`
-        conf = SketchTargetConf(currentSketch, allowRotate=False)
-
-        if otherSketch := chooseBlueprint():
-            thisDoc.openTransaction('Load Blueprint (Sketch)')
-            try:
-                duplicateSketch(otherSketch, currentSketch, conf)
-                thisDoc.commitTransaction()
-            except Exception:
-                thisDoc.abortTransaction()
-                raise
-            finally:
-                FreeCAD.closeDocument(otherSketch.Document.Name)
+        if blueprint := chooseBlueprint():
+            # cancel any current geometry or constraint tool
+            FreeCADGui.runCommand('Sketcher_StopOperation', 0)
+            BlueprintInserter(currentSketch, blueprint, on_close=lambda:
+                FreeCAD.closeDocument(blueprint.Document.Name))
 
 
 def getActiveSketchInEditMode() -> 'Sketch|None':

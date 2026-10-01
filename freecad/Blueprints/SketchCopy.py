@@ -1,17 +1,36 @@
 '''
 Code related to copying geometry from one Sketch to another.
 '''
+from dataclasses import dataclass
+
 from .helper.constraints import Constr
 from .helper.geodraw import Draw, moveTo
 from .helper.georef import GeoId, GeoRef
 from .helper.notify import Notify
-from .SketchTargetConf import SketchTargetConf
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
     from FreeCAD import Vector
+
+
+@dataclass
+class SketchTargetConf:
+    '''
+    placement:
+        Place blueprint at these coordinates (instead of origin).
+    constrainTo:
+        If user has selected an Edge or Vertex prior to loading the blueprint,
+        add an `PointOnObject` / `Coincident` constraint (respectively).
+    allowRotate:
+        After import, run `removeAxesAlignment` to allow blueprint rotation.
+        This depends heavily on the quality of the source sketch.
+        Please avoid `DistanceX` and `DistanceY` constraints.
+    '''
+    placement: 'Vector|None'
+    constrainTo: 'GeoRef|None'
+    allowRotate: bool = False
 
 
 def _validate(sketch: 'Sketch') -> None:

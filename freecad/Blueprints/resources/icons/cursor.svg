@@ -1,0 +1,20 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+<g id="crosshair" stroke="#fff" stroke-linecap="round" stroke-width="2.5">
+ <path d="m16 3v9m0 8v9m-13-13h9m8 0h9"/>
+</g>
+<g transform="translate(24,24)scale(0.6)">
+ <g id="bg" fill="none">
+  <path d="m22 4h38v38h-38z" stroke="#000" stroke-width="8"/>
+  <path d="m22 4h38v38h-38z" stroke="#297fbe" stroke-width="4"/>
+ </g>
+ <g id="fg" fill="none">
+  <path stroke="#000" stroke-width="8" d="m8 56s10-21 0-38c14-5 28-11 33-2 7 11-19 20-13 19s20 4 20 15-40 6-40 6"/>
+  <path stroke="#d4d7d0" stroke-width="4" d="m8 56s10-21 0-38c14-5 28-11 33-2 7 11-19 20-13 19s20 4 20 15-40 6-40 6"/>
+ </g>
+ <g id="dots" fill="#e33" stroke="#300" stroke-width="2">
+  <circle cx="8" cy="18" r="6.5"/>
+  <circle cx="28" cy="35" r="6.5"/>
+  <circle cx="8" cy="56" r="6.5"/>
+ </g>
+</g>
+</svg>

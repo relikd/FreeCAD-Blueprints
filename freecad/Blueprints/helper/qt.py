@@ -25,6 +25,13 @@ class Icon:
         ''' Shown in file browser. FreeCAD app icon for `.FCStd` files. '''
         return QtGui.QPixmap(RES_ROOT / 'icons' / 'freecad-document.svg')
 
+    @staticmethod
+    def blueprint_cursor() -> QtGui.QCursor:
+        ''' Mouse cursor shown while inserting blueprint. '''
+        svg = QtGui.QPixmap(RES_ROOT / 'icons' / 'cursor.svg')
+        svg.setDevicePixelRatio(2)
+        return QtGui.QCursor(svg, 8, 8)
+
 
 class MenuAction:
     @staticmethod
