@@ -1,6 +1,7 @@
 '''
 Code related to copying geometry from one Sketch to another.
 '''
+import re
 from dataclasses import dataclass
 
 from .helper.constraints import Constr
@@ -85,7 +86,6 @@ def _createArtificialAxes(sketch: 'Sketch', toPos: 'Vector|None') \
     Create artificial axis to allow translation.
     Returns geo-ids for artificial axis `(vertical, horizontal)` (both lines)
     '''
-    # TODO: use minimal axis OR expand axis to sketch bounds?
     axis_len = 1
     v, h = sketch.addGeometry([  # type: ignore[misc]
         moveTo(toPos, Draw.line(0, 0, 0, axis_len)),
@@ -137,6 +137,7 @@ def _copy_constraints(
             con.Second = fn(con.Second)
         if con.Third != GeoId.Undef:
             con.Third = fn(con.Third)
+        # TODO: if same name, increment as new name?
         con_list.append(con)
     dst.addConstraint(con_list)
     # dst.solve()  # no need, done at the end
@@ -146,11 +147,15 @@ def _copy_expressions(src: 'Sketch', dst: 'Sketch', cid_start: int) -> None:
     ''' Duplicate expressions. Offset constraint indices by `cid_start`. '''
     for field, val in src.ExpressionEngine:
         if field.startswith('Constraints['):
-            new_index = int(field.removesuffix(']')[12:]) + cid_start
-            dst.setExpression(f'Constraints[{new_index}]', val)
+            field = _re_index_expressions(field, cid_start)
+        elif field.startswith('.Constraints.'):
+            # TODO: if same name, increment as new name?
+            pass  # copy named constraint as is
         else:
             Notify.Log.err(f'Unhandled expr variant: "{field}". '
                            'Please report this error on GitHub.')
+            continue
+        dst.setExpression(field, _re_index_expressions(val, cid_start))
 
 
 def _constrain_origin(dst: 'Sketch', origin: GeoRef, toTarget: GeoRef) -> None:
@@ -158,3 +163,10 @@ def _constrain_origin(dst: 'Sketch', origin: GeoRef, toTarget: GeoRef) -> None:
         dst.addConstraint(Constr.PointOnObject(origin, toTarget.geoid))
     else:
         dst.addConstraint(Constr.Coincident(toTarget, origin))
+
+
+rx_exp = re.compile(r'Constraints\[([0-9]+)\]')
+
+
+def _re_index_expressions(exp: str, start: int) -> str:
+    return rx_exp.sub(lambda x: f'Constraints[{start + int(x.group(1))}]', exp)
