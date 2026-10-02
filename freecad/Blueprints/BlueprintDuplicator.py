@@ -55,7 +55,7 @@ class BlueprintDuplicator:
         if hasArtificialAxis:
             _V, _H = _createArtificialAxes(dst, self.placement)
         else:
-            _V, _H = GeoId.HAxis, GeoId.VAxis
+            _V, _H = GeoId.VAxis, GeoId.HAxis
 
         # after (potential) artificial axis
         # used to fix references when importing from other sketch
