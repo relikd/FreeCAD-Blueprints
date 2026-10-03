@@ -2,6 +2,7 @@ import FreeCAD
 import FreeCADGui
 
 from .events.ActionListener import ActionListener
+from .events.DocObserver import DocObserver
 from .events.EscListener import EscListener
 from .events.MouseClickListener import MouseClickListener, UserSelection
 from .events.MouseCursorListener import MouseCursorListener
@@ -11,7 +12,6 @@ from .BlueprintLoader import reloadSketch
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from PartDesignGui import ViewProvider
     from Sketcher import SketchObject as Sketch
 
 
@@ -47,19 +47,20 @@ class BlueprintInserter:
         # user pressed esc to exit insertion mode
         self.esc_monitor = EscListener(self.on_esc)
         # self-close on exiting Sketcher Edit Mode
-        FreeCADGui.addDocumentObserver(self)
+        self.doc_monitor = DocObserver(onEditEnd=self.on_end_editing)
 
     def close(self, *, postponeCursorCleanup: bool = False) -> None:
         _SESSIONS.remove(self)
-        FreeCADGui.removeDocumentObserver(self)
         self.cursor_monitor.stop(cleanupLater=postponeCursorCleanup)
         self.click_monitor.stop()
         self.action_monitor.stop()
         self.esc_monitor.stop()
+        self.doc_monitor.stop()
         del self.cursor_monitor
         del self.click_monitor
         del self.action_monitor
         del self.esc_monitor
+        del self.doc_monitor
         FreeCAD.closeDocument(self.blueprint.Document.Name)
         del self.blueprint
         del self.current
@@ -73,9 +74,9 @@ class BlueprintInserter:
         self.close()
         return True
 
-    def slotResetEdit(self, _obj: 'ViewProvider') -> None:  # DocumentObserver
-        ''' Called when exiting sketcher edit mode. '''
-        self.close()
+    def on_end_editing(self) -> None:
+        ''' Sketch editing ended via close dialog. '''
+        self.close(postponeCursorCleanup=True)
 
     def did_click(self, sel: UserSelection) -> None:
         # TODO: add GUI checkbox for allowRotate

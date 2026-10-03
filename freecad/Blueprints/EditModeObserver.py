@@ -3,13 +3,9 @@ Hide toolbar while FreeCAD is not in Sketcher Edit Mode
 '''
 import FreeCADGui
 
+from .events.DocObserver import DocObserver
 from .helper.qt import QtCore, QtWidgets
 from .Manipulator import _TOOLBAR_NAME
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from PartDesignGui import ViewProvider
 
 
 def recompute_visibility() -> None:
@@ -33,16 +29,7 @@ def _update_visibility(
             return
 
 
-class EditModeObserver:
-    def slotInEdit(self, view_provider: 'ViewProvider') -> None:
-        if not view_provider.Object.isDerivedFrom('Sketcher::SketchObject'):
-            return
-        _update_visibility(show=True)
-
-    def slotResetEdit(self, view_provider: 'ViewProvider') -> None:
-        if not view_provider.Object.isDerivedFrom('Sketcher::SketchObject'):
-            return
-        _update_visibility(show=False)
-
-
-FreeCADGui.addDocumentObserver(EditModeObserver())
+DocObserver(
+    onEditStart=lambda: _update_visibility(show=True),
+    onEditEnd=lambda: _update_visibility(show=False),
+)
