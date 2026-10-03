@@ -6,15 +6,12 @@ import FreeCADGui
 
 from .events.doc_observer import DocObserver
 from .helper.qt import QtCore, QtWidgets
-
-
-TOOLBAR_NAME = 'Sketcher Blueprints'
+from .register_workbench import PseudoWorkbench
 
 
 #################################################
 # Change toolbar visibility depending on edit mode
 #################################################
-
 
 def recompute_visibility() -> None:
     ''' Re-set toolbar visibility after Workbench switching. '''
@@ -31,7 +28,7 @@ def _update_visibility(
     if show is not None:
         _state[0] = show
     for bar in available_toolbars():
-        if bar.objectName() == TOOLBAR_NAME:
+        if bar.objectName() == PseudoWorkbench.TOOLBAR_NAME:
             bar.setVisible(_state[0])
             bar.toggleViewAction().setVisible(_state[0])
             return

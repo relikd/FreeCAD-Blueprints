@@ -3,6 +3,8 @@ Register (and auto-enable) toolbar and menu items.
 '''
 import FreeCADGui
 
+from typing import Final
+
 
 # see https://github.com/FreeCAD/Addon-Academy/blob/2c2e7a97f2094752eafb6b67848b4238ce461e42/Source/Demos/New-Toolbar/Source/freecad/Calvinball/Manipulator.py#L25-L33
 def isSketcher() -> bool:
@@ -18,6 +20,8 @@ def isSketcher() -> bool:
 class PseudoWorkbench:
     ''' Postpone register commands and global, so `init_gui.py` stays fast. '''
 
+    TOOLBAR_NAME: Final = 'Sketcher Blueprints'
+
     def modifyMenuBar(self) -> list[dict[str, str]]:
         if isSketcher():
             from .register_commands import CMD_NAME  # noqa: PLC0415
@@ -30,7 +34,7 @@ class PseudoWorkbench:
     def modifyToolBars(self) -> list[dict[str, str]]:
         if isSketcher():
             from .register_commands import CMD_NAME  # noqa: PLC0415
-            from .register_global import TOOLBAR_NAME, recompute_visibility  # noqa: PLC0415
+            from .register_global import recompute_visibility  # noqa: PLC0415
             recompute_visibility()
             # FreeCAD is about to rebuild the toolbar and show it.
             # Re-apply current state, since the QToolBar does not exist yet.
@@ -40,8 +44,8 @@ class PseudoWorkbench:
                 # Insert places the icon before the Point Geometry
                 # {'toolItem': 'Sketcher_CreatePoint', 'insert': X},
                 # standalone toolbar
-                {'toolBar': '', 'append': TOOLBAR_NAME},
-                {'toolBar': TOOLBAR_NAME, 'append': CMD_NAME},
+                {'toolBar': '', 'append': self.TOOLBAR_NAME},
+                {'toolBar': self.TOOLBAR_NAME, 'append': CMD_NAME},
             ]
         return []
 
