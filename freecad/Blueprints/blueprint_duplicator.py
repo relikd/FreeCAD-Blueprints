@@ -75,9 +75,9 @@ class BlueprintDuplicator:
             _constrain_origin(dst, GeoRef.S(_H), self.constrainTo)
 
 
-############################################################
+#################################################
 # Helper methods
-############################################################
+#################################################
 
 def _createArtificialAxes(sketch: 'Sketch', toPos: 'Vector|None') \
         -> tuple[int, int]:

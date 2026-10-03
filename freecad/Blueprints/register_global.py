@@ -30,7 +30,7 @@ def _update_visibility(
     '''
     if show is not None:
         _state[0] = show
-    for bar in FreeCADGui.getMainWindow().findChildren(QtWidgets.QToolBar):
+    for bar in available_toolbars():
         if bar.objectName() == TOOLBAR_NAME:
             bar.setVisible(_state[0])
             bar.toggleViewAction().setVisible(_state[0])
@@ -41,3 +41,11 @@ DocObserver(
     onEditStart=lambda: _update_visibility(show=True),
     onEditEnd=lambda: _update_visibility(show=False),
 )
+
+
+#################################################
+# Typed helper
+#################################################
+
+def available_toolbars() -> list[QtWidgets.QToolBar]:
+    return FreeCADGui.getMainWindow().findChildren(QtWidgets.QToolBar)
