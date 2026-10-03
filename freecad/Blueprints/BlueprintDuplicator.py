@@ -107,8 +107,7 @@ def _createArtificialAxes(sketch: 'Sketch', toPos: 'Vector|None') \
 def _copy_geometry(src: 'Sketch', dst: 'Sketch', toPos: 'Vector|None') -> None:
     ''' Duplicate geometry. Translate geometry by `toPos` vector. '''
     if toPos:
-        for geo in src.Geometry:
-            dst.addGeometry(moveTo(toPos, geo))
+        dst.addGeometry([moveTo(toPos, geo) for geo in src.Geometry])
     else:
         dst.addGeometry(src.Geometry)  # else, copy whole list verbatim
 
