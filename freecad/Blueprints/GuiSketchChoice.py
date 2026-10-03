@@ -139,7 +139,6 @@ class ListWidget(QtWidgets.QListWidget):
     def apply_filter(self, text: str, *, incl_desc: bool) -> None:
         ''' Filter entries on search query change. '''
         query = text.casefold().strip()
-        # self.sortItems()
 
         is_first = True
         for row in range(self.count()):

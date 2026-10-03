@@ -1,3 +1,7 @@
+'''
+Code related to observing a document for changes (edit mode enter / exit).
+Convenience wrapper for `FreeCADGui.addDocumentObserver`.
+'''
 from dataclasses import dataclass
 
 import FreeCADGui

@@ -1,8 +1,5 @@
 '''
 A wild bunch of helper functions which are too small to place somewhere else.
-
-All `FreeCAD` and `Qt` imports are "on-first-use".
-This way, importing `utils` does not import a whole feature suite.
 '''
 import sys
 import shutil

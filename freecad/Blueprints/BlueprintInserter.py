@@ -1,3 +1,6 @@
+'''
+Code related to the workflow of inserting a sketch (key-, mouse-events, etc.).
+'''
 import FreeCAD
 import FreeCADGui
 

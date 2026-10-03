@@ -66,29 +66,3 @@ def getActiveSketchInEditMode() -> 'Sketch|None':
 
 
 FreeCADGui.addCommand('Blueprints_Add', Blueprints_Add_Cmd())
-
-
-##################################################
-# Group commands (drop-down in toolbar, submenus in menu)
-##################################################
-
-# class CommandGroup:
-#     def GetDefaultCommand(self) -> int:
-#         return 1
-
-#     def GetResources(self) -> dict[str, str]:
-#         return {
-#             'MenuText': 'Blueprints',
-#             'ToolTip': 'Blueprints addon extension',
-#             'Pixmap': 'toolbar.svg',
-#             'CmdType': 'ForEdit AlterDoc AlterSelection',
-#         }
-
-#     def GetCommands(self) -> list[str]:
-#         return ['Blueprints_Add', 'Blueprints_Add']
-
-#     def Activated(self, cmd: int = 0) -> None:
-#         Console.PrintError(f'Run {cmd} (doesnt call child).\n')
-
-
-# FreeCADGui.addCommand('Blueprints_Grp', CommandGroup())

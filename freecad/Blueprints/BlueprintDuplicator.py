@@ -42,7 +42,6 @@ class BlueprintDuplicator:
 
     def copyTo(self, dst: 'Sketch', *, src: 'Sketch') -> None:
         ''' Copy a sketch from one document to another. '''
-        # bounds = src.Shape.BoundBox
         _validate(src)
 
         # where newly created geo ids start

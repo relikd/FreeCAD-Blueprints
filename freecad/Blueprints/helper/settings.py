@@ -1,3 +1,6 @@
+'''
+Code related to accessing and persisting user settings.
+'''
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
