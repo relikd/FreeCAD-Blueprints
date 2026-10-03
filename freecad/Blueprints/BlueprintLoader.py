@@ -60,12 +60,29 @@ def _loadSketchFromDoc(doc: 'Document') -> 'Sketch|None':
     return open_sketch_chooser(sks)
 
 
+# fixes: Vanishing expressions after multi-copy insert
+#
+# After the third copy, expressions from the second copy are forgotten.
+# Also, the last copy will forget its expressions as soon as a new constraint
+# is added – or the sketch is closed. Restoring the document fixes this issue.
+#
+# What didn't work:
+# - copy geo+constr+expr without modifying the source sketch in any way
+# - insert constraints in various ways (also by deleting prev and reinserting)
+# - delete and rebuild constr+expr on SOURCE sketch (before & after copying)
+# - adding geo+constr as list & individually
+# - abortTransaction() and commitTransaction() + undo()
+# - recompute() and solve() at various points and for both, source & dest
+# - reference map for geo+constr ids instead of start_index + offset
+#
+# The root cause is likely some modified document state or a FreeCAD bug.
+# Hopefully this reload can be omitted at some point.
 def reloadSketch(sketch: 'Sketch') -> 'Sketch':
     ''' Reload sketch from disk. '''
-    # TODO: replace with `doc.restore()` once #33181 is fixed
     activeDoc = FreeCAD.ActiveDocument
     sketch_id = sketch.ID
     path = sketch.Document.FileName
+    # TODO: replace with `doc.restore()` once #33181 is fixed
     FreeCAD.closeDocument(sketch.Document.Name)
     doc = FreeCAD.openDocument(path, hidden=True, temporary=True)  # type: ignore[call-arg]
     if activeDoc:
