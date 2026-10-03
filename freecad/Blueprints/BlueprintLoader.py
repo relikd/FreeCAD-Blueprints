@@ -58,3 +58,16 @@ def _loadSketchFromDoc(doc: 'Document') -> 'Sketch|None':
     if len(sks) == 1:
         return sks[0]  # if there is only one, load it right away
     return open_sketch_chooser(sks)
+
+
+def reloadSketch(sketch: 'Sketch') -> 'Sketch':
+    ''' Reload sketch from disk. '''
+    # TODO: replace with `doc.restore()` once #33181 is fixed
+    activeDoc = FreeCAD.ActiveDocument
+    sketch_id = sketch.ID
+    path = sketch.Document.FileName
+    FreeCAD.closeDocument(sketch.Document.Name)
+    doc = FreeCAD.openDocument(path, hidden=True, temporary=True)  # type: ignore[call-arg]
+    if activeDoc:
+        FreeCAD.setActiveDocument(activeDoc.Name)  # restore Focus
+    return doc.getObject(sketch_id)

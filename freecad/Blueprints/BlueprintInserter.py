@@ -6,6 +6,7 @@ from .events.EscListener import EscListener
 from .events.MouseClickListener import MouseClickListener, UserSelection
 from .events.MouseCursorListener import MouseCursorListener
 from .BlueprintDuplicator import BlueprintDuplicator
+from .BlueprintLoader import reloadSketch
 
 from typing import TYPE_CHECKING
 
@@ -77,14 +78,30 @@ class BlueprintInserter:
         self.close()
 
     def did_click(self, sel: UserSelection) -> None:
+        # TODO: add GUI checkbox for allowRotate
+        # TODO: checkbox for same-name = equals-constraint?
         duplicator = BlueprintDuplicator(sel.vec, sel.geo, allowRotate=False)
         thisDoc = self.current.Document
         thisDoc.openTransaction('Insert Blueprint (Sketch)')
         try:
             duplicator.copyTo(self.current, src=self.blueprint)
             thisDoc.commitTransaction()
-            FreeCADGui.Selection.clearSelection()
         except Exception:
             thisDoc.abortTransaction()
             self.close()
             raise
+
+        FreeCADGui.Selection.clearSelection()
+
+        # fixes: Vanishing expressions after multi-copy insert
+        #
+        # After the third copy, expressions from the second copy are forgotten.
+        # Also, the last copy will forget its expressions as soon as a new
+        # constraint is added or the document closes. Closing and reopening
+        # the document fixes this issue. The root cause is likely the
+        # copy-constraints step. But in any case, the source seems to be the
+        # modified document.
+        #
+        # Hopefully this reload can be omitted with proper constraint copying.
+        # (such that we don't modify the source sketch)
+        self.blueprint = reloadSketch(self.blueprint)
