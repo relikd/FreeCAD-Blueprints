@@ -50,8 +50,7 @@ class Blueprints_Add_Cmd:
         if blueprint := chooseBlueprint():
             # cancel any current geometry or constraint tool
             FreeCADGui.runCommand('Sketcher_StopOperation', 0)
-            BlueprintInserter(currentSketch, blueprint, on_close=lambda:
-                FreeCAD.closeDocument(blueprint.Document.Name))
+            BlueprintInserter(currentSketch, blueprint)
 
 
 def getActiveSketchInEditMode() -> 'Sketch|None':

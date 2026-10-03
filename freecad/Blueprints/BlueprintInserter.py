@@ -1,3 +1,4 @@
+import FreeCAD
 import FreeCADGui
 
 from .events.ActionListener import ActionListener
@@ -6,7 +7,7 @@ from .events.MouseClickListener import MouseClickListener, UserSelection
 from .events.MouseCursorListener import MouseCursorListener
 from .BlueprintDuplicator import BlueprintDuplicator
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from PartDesignGui import ViewProvider
@@ -23,8 +24,7 @@ class BlueprintInserter:
         for prev in _SESSIONS:
             prev.close()
 
-    def __init__(self, current: 'Sketch', blueprint: 'Sketch', *,
-                 on_close: Callable[[], None]) -> None:
+    def __init__(self, current: 'Sketch', blueprint: 'Sketch') -> None:
         doc = FreeCADGui.ActiveDocument
         if not doc:
             raise RuntimeError('No active document')
@@ -36,7 +36,6 @@ class BlueprintInserter:
 
         self.current = current
         self.blueprint = blueprint
-        self.callback = on_close
 
         # indicate insertion mode by showing cursor icon
         self.cursor_monitor = MouseCursorListener(view)
@@ -60,8 +59,7 @@ class BlueprintInserter:
         del self.click_monitor
         del self.action_monitor
         del self.esc_monitor
-        self.callback()
-        del self.callback
+        FreeCAD.closeDocument(self.blueprint.Document.Name)
         del self.blueprint
         del self.current
 
