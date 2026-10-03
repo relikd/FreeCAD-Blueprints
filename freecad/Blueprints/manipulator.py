@@ -33,8 +33,8 @@ class Manipulator:
     def modifyToolBars(self) -> list[dict[str, str]]:
         if isSketcher():
             # Postpone registering so init_gui.py stays fast
-            from . import Commands  # noqa: F401, PLC0415
-            from .EditModeObserver import recompute_visibility  # noqa: PLC0415
+            from . import commands  # noqa: F401, PLC0415
+            from .edit_mode_observer import recompute_visibility  # noqa: PLC0415
             # FreeCAD is about to rebuild the toolbar and show it.
             # Re-apply current state, since the QToolBar does not exist yet.
             recompute_visibility()

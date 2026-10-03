@@ -4,13 +4,13 @@ Code related to the workflow of inserting a sketch (key-, mouse-events, etc.).
 import FreeCAD
 import FreeCADGui
 
-from .events.ActionListener import ActionListener
-from .events.DocObserver import DocObserver
-from .events.EscListener import EscListener
-from .events.MouseClickListener import MouseClickListener, UserSelection
-from .events.MouseCursorListener import MouseCursorListener
-from .BlueprintDuplicator import BlueprintDuplicator
-from .BlueprintLoader import reloadSketch
+from .events.action_listener import ActionListener
+from .events.doc_observer import DocObserver
+from .events.esc_listener import EscListener
+from .events.mouse_click_listener import MouseClickListener, UserSelection
+from .events.mouse_cursor_listener import MouseCursorListener
+from .blueprint_duplicator import BlueprintDuplicator
+from .blueprint_loader import reloadSketch
 
 from typing import TYPE_CHECKING
 

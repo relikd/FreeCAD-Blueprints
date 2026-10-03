@@ -3,9 +3,9 @@ Hide toolbar while FreeCAD is not in Sketcher Edit Mode
 '''
 import FreeCADGui
 
-from .events.DocObserver import DocObserver
+from .events.doc_observer import DocObserver
 from .helper.qt import QtCore, QtWidgets
-from .Manipulator import _TOOLBAR_NAME
+from .manipulator import _TOOLBAR_NAME
 
 
 def recompute_visibility() -> None:
