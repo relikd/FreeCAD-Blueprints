@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
 
+CMD_NAME = 'Blueprints_Add'
+
 
 # see https://github.com/FreeCAD/FreeCAD/blob/f873b82f1e48632394609103e0b9071d83e46abf/src/Gui/Command.cpp#L1409
 class Blueprints_Add_Cmd:
@@ -65,4 +67,4 @@ def getActiveSketchInEditMode() -> 'Sketch|None':
     return edit.Object
 
 
-FreeCADGui.addCommand('Blueprints_Add', Blueprints_Add_Cmd())
+FreeCADGui.addCommand(CMD_NAME, Blueprints_Add_Cmd())

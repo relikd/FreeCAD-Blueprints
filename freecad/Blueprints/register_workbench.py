@@ -3,49 +3,45 @@ Register (and auto-enable) toolbar and menu items.
 '''
 import FreeCADGui
 
-_TOOLBAR_NAME = 'Sketcher Blueprints'
 
-
-def active_workbench_name() -> str:
-    ''' Current workbench name (fixed) '''
-    active = FreeCADGui.activeWorkbench()
-    for name, handler in FreeCADGui.listWorkbenches().items():  # type: ignore
-        if handler is active:
-            return name
-    return ''
-
-
+# see https://github.com/FreeCAD/Addon-Academy/blob/2c2e7a97f2094752eafb6b67848b4238ce461e42/Source/Demos/New-Toolbar/Source/freecad/Calvinball/Manipulator.py#L25-L33
 def isSketcher() -> bool:
-    return active_workbench_name() == 'SketcherWorkbench'
+    # `FreeCADGui.activeWorkbench().name()` cannot be used here, see above
+    active = FreeCADGui.activeWorkbench()
+    for name, handler in FreeCADGui.listWorkbenches().items():  # type: ignore[attr-defined]
+        if handler is active:
+            return name == 'SketcherWorkbench'
+    return False
 
 
 # see https://github.com/FreeCAD/FreeCAD/blob/main/src/Gui/WorkbenchManipulatorPython.cpp
-class Manipulator:
+class PseudoWorkbench:
+    ''' Postpone register commands and global, so `init_gui.py` stays fast. '''
+
     def modifyMenuBar(self) -> list[dict[str, str]]:
         if isSketcher():
+            from .register_commands import CMD_NAME  # noqa: PLC0415
             return [
                 {'menuItem': 'Geometries', 'append': 'Separator'},
-                {'menuItem': 'Geometries', 'append': 'Blueprints_Add'},
+                {'menuItem': 'Geometries', 'append': CMD_NAME},
             ]
-            # Use `Blueprints_Grp` if you want a submenu
         return []
 
     def modifyToolBars(self) -> list[dict[str, str]]:
         if isSketcher():
-            # Postpone registering so init_gui.py stays fast
-            from . import commands  # noqa: F401, PLC0415
-            from .edit_mode_observer import recompute_visibility  # noqa: PLC0415
+            from .register_commands import CMD_NAME  # noqa: PLC0415
+            from .register_global import TOOLBAR_NAME, recompute_visibility  # noqa: PLC0415
+            recompute_visibility()
             # FreeCAD is about to rebuild the toolbar and show it.
             # Re-apply current state, since the QToolBar does not exist yet.
-            recompute_visibility()
             return [
                 # Append shows the icon after 'Toggle Construction Geometry'
                 # {'toolBar': 'Geometries', 'append': X},
                 # Insert places the icon before the Point Geometry
                 # {'toolItem': 'Sketcher_CreatePoint', 'insert': X},
                 # standalone toolbar
-                {'toolBar': '', 'append': _TOOLBAR_NAME},
-                {'toolBar': _TOOLBAR_NAME, 'append': 'Blueprints_Add'},
+                {'toolBar': '', 'append': TOOLBAR_NAME},
+                {'toolBar': TOOLBAR_NAME, 'append': CMD_NAME},
             ]
         return []
 

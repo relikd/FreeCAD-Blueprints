@@ -1,11 +1,19 @@
 '''
-Hide toolbar while FreeCAD is not in Sketcher Edit Mode
+Code which should run at app start but is postponed until after workbench
+registration.
 '''
 import FreeCADGui
 
 from .events.doc_observer import DocObserver
 from .helper.qt import QtCore, QtWidgets
-from .manipulator import _TOOLBAR_NAME
+
+
+TOOLBAR_NAME = 'Sketcher Blueprints'
+
+
+#################################################
+# Change toolbar visibility depending on edit mode
+#################################################
 
 
 def recompute_visibility() -> None:
@@ -23,7 +31,7 @@ def _update_visibility(
     if show is not None:
         _state[0] = show
     for bar in FreeCADGui.getMainWindow().findChildren(QtWidgets.QToolBar):
-        if bar.objectName() == _TOOLBAR_NAME:
+        if bar.objectName() == TOOLBAR_NAME:
             bar.setVisible(_state[0])
             bar.toggleViewAction().setVisible(_state[0])
             return
