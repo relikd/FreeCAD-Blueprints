@@ -6,14 +6,15 @@ from dataclasses import dataclass
 
 from .helper.constraints import Constr
 from .helper.geodraw import Draw, moveTo
-from .helper.georef import GeoId, GeoRef
+from .helper.georef import GeoId, GeoRef, PointPos
 from .helper.notify import Notify
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
     from FreeCAD import Vector
+    from Part import Geometry
 
 
 def _validate(sketch: 'Sketch') -> None:
@@ -50,18 +51,14 @@ class BlueprintDuplicator:
 
         # check if sketch contains references on any of the axes
         # override original axis (if necessary) to allow translation
-        hasArtificialAxis = Constr.any(src.Constraints, GeoId.isAxis)
-        if hasArtificialAxis:
-            _V, _H = _createArtificialAxes(dst, self.placement)
-        else:
-            _V, _H = GeoId.VAxis, GeoId.HAxis
+        axis = _createArtificialAxis(dst, self.placement, _axisUsage(src))
 
         # after (potential) artificial axis
         # used to fix references when importing from other sketch
         geoid_offset, cid_offset = dst.GeometryCount, dst.ConstraintCount
 
         _copy_geometry(src, dst, self.placement)
-        name_map = _copy_constraints(src, dst, geoid_offset, _H, _V)
+        name_map = _copy_constraints(src, dst, geoid_offset, axis)
         _copy_expressions(src, dst, cid_offset, name_map)
 
         if self.allowRotate:
@@ -71,36 +68,88 @@ class BlueprintDuplicator:
         # solve at the end should be sufficient as we dont manipulate geometry
         dst.solve()
 
-        if hasArtificialAxis and self.constrainTo:
-            _constrain_origin(dst, GeoRef.S(_H), self.constrainTo)
+        if axis and self.constrainTo:
+            _constrain_origin(dst, GeoRef.S(axis.origin), self.constrainTo)
 
 
 #################################################
 # Helper methods
 #################################################
 
-def _createArtificialAxes(sketch: 'Sketch', toPos: 'Vector|None') \
-        -> tuple[int, int]:
+class ReferencedAxis(NamedTuple):
+    v: bool
+    h: bool
+    origin: bool
+
+
+def _axisUsage(sketch: 'Sketch') -> ReferencedAxis:
+    ''' Check whether sketch references `(VAxis, HAxis, RtPnt)`. '''
+    v, h, origin = False, False, False
+    for con in sketch.Constraints:
+        for geo, pos in (
+            (con.First, con.FirstPos),
+            (con.Second, con.SecondPos),
+            (con.Third, con.ThirdPos),
+        ):
+            if geo == GeoId.VAxis:
+                v = True
+            elif geo == GeoId.HAxis:
+                if pos == PointPos.start:
+                    origin = True
+                else:
+                    h = True
+        if v and h:  # origin not relevant. h is used as origin
+            return ReferencedAxis(True, True, True)  # break early
+    return ReferencedAxis(v, h, origin)
+
+
+class ArtificialAxis(NamedTuple):
+    v: int
+    h: int
+    origin: int
+
+
+def _createArtificialAxis(
+    sketch: 'Sketch', toPos: 'Vector|None', axis: ReferencedAxis,
+) -> 'ArtificialAxis|None':
     '''
     Create artificial axis to allow translation.
-    Returns geo-ids for artificial axis `(vertical, horizontal)` (both lines)
+    Returns `None`, if default axis should be used (no axis reference found).
     '''
+    if not any(axis):
+        return None
+
+    def fn(geo: 'Geometry') -> int:
+        # all are created as construction geometry ("True")
+        return sketch.addGeometry(moveTo(toPos, geo), True)  # type: ignore[return-value]
+
+    if not axis.h and not axis.v:
+        return ArtificialAxis(GeoId.VAxis, GeoId.HAxis, fn(Draw.point(0, 0)))
+
     axis_len = 1
-    v, h = sketch.addGeometry([  # type: ignore[misc]
-        moveTo(toPos, Draw.line(0, 0, 0, axis_len)),
-        moveTo(toPos, Draw.line(0, 0, axis_len, 0)),
-    ], True)  # construction
+    v = fn(Draw.line(0, 0, 0, axis_len)) if axis.v else GeoId.VAxis
+    h = fn(Draw.line(0, 0, axis_len, 0)) if axis.h else GeoId.HAxis
+
     # add constraints
-    cons = sketch.addConstraint([
-        Constr.Coincident(GeoRef.S(h), GeoRef.S(v)),
-        Constr.Perpendicular.Lines(v, h),
-        Constr.Distance.Line(v, length=axis_len),
-        Constr.Distance.Line(h, length=axis_len),
-        Constr.Horizontal.Line(h),
-    ])
-    sketch.setVirtualSpace(cons, True)  # hide from user
+    cons = []
+    if axis.h:
+        cons.extend([
+            Constr.Distance.Line(h, length=axis_len),
+            Constr.Horizontal.Line(h),
+        ])
+    if axis.v:
+        cons.append(Constr.Distance.Line(v, length=axis_len))
+        if axis.h:
+            # if rotation is enabled, this will reduce one constraint
+            cons.append(Constr.Perpendicular.Lines(v, h))
+        else:
+            cons.append(Constr.Vertical.Line(v))
+    if axis.h and axis.v:
+        cons.append(Constr.Coincident(GeoRef.S(h), GeoRef.S(v)))
+
+    sketch.setVirtualSpace(sketch.addConstraint(cons), True)  # hide from user
     # sketch.solve()  # no need, done at the end
-    return v, h
+    return ArtificialAxis(v, h, origin=h if axis.h else v)
 
 
 def _copy_geometry(src: 'Sketch', dst: 'Sketch', toPos: 'Vector|None') -> None:
@@ -112,7 +161,8 @@ def _copy_geometry(src: 'Sketch', dst: 'Sketch', toPos: 'Vector|None') -> None:
 
 
 def _copy_constraints(
-    src: 'Sketch', dst: 'Sketch', geoid_start: int, h_axis: int, v_axis: int,
+    src: 'Sketch', dst: 'Sketch', geoid_start: int,
+    axis: 'ArtificialAxis|None',
 ) -> dict[str, str]:
     '''
     Duplicate constraints. Offset geo-ids by `geoid_start`.
@@ -121,14 +171,20 @@ def _copy_constraints(
 
     Returns mapping for renamed constraints: `{old-name: new-name}`.
     '''
-    def shift_index(geoid: int) -> int:
-        if geoid >= 0:  # normal geometry
-            return geoid_start + geoid
-        if geoid == GeoId.HAxis:
-            return h_axis
-        if geoid == GeoId.VAxis:
-            return v_axis
-        return geoid
+    if axis:
+        def shift_index(geoid: int, _pos: int) -> int:
+            if geoid >= 0:  # normal geometry
+                return geoid_start + geoid
+            if geoid == GeoId.HAxis:
+                return axis.origin if _pos == PointPos.start else axis.h
+            if geoid == GeoId.VAxis:
+                return axis.v
+            return geoid
+    else:  # use original axis
+        def shift_index(geoid: int, _pos: int) -> int:
+            if geoid >= 0:  # normal geometry
+                return geoid_start + geoid
+            return geoid
 
     rv = {}
     existing_names = {x.Name for x in dst.Constraints} - {''}
@@ -144,11 +200,11 @@ def _copy_constraints(
 
     con_list = []
     for con in src.Constraints:
-        con.First = shift_index(con.First)
+        con.First = shift_index(con.First, con.FirstPos)
         if con.Second != GeoId.Undef:
-            con.Second = shift_index(con.Second)
+            con.Second = shift_index(con.Second, con.SecondPos)
         if con.Third != GeoId.Undef:
-            con.Third = shift_index(con.Third)
+            con.Third = shift_index(con.Third, con.ThirdPos)
         if con.Name in existing_names:
             con.Name = shift_name(con.Name)
         con_list.append(con)
