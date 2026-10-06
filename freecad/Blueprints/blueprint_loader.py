@@ -5,7 +5,7 @@ import FreeCAD
 
 from .helper.notify import Notify
 from .gui_file_browser import open_blueprint_browser
-from .gui_sketch_choice import open_sketch_chooser
+from .gui.sketch_choice import open_sketch_chooser
 
 from typing import TYPE_CHECKING
 

@@ -93,12 +93,20 @@ class QuickGui:
         return rv
 
     @staticmethod
-    def checkbox(label: str, pref: str) -> QtWidgets.QCheckBox:
+    def checkbox(
+        label: str,
+        *,
+        pref: str,
+        on_change: Callable[[bool], None],
+    ) -> QtWidgets.QCheckBox:
         rv = QtWidgets.QCheckBox(label)
         rv.setChecked(Settings.getBool(pref))
 
         def fn(newState: QtCore.Qt.CheckState) -> None:
-            Settings.setBool(pref, newState == QtCore.Qt.CheckState.Checked)
+            flag = newState == QtCore.Qt.CheckState.Checked
+            Settings.setBool(pref, flag)
+            on_change(flag)
 
         rv.checkStateChanged.connect(fn)
+        on_change(rv.isChecked())
         return rv
