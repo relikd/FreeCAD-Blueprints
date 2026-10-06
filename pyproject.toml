@@ -12,5 +12,5 @@ dev = [
 [tool.zuban]
 python_version = "3.11"
 mypy_path = [
-	"freecad",
+	"freecad/Blueprints",
 ]
