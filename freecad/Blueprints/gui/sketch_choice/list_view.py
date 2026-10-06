@@ -45,6 +45,7 @@ class ListView(QtWidgets.QListView):
                 QtCore.QItemSelectionModel.SelectionFlag.ClearAndSelect,
             )
             return
+        self.setCurrentIndex(QtCore.QModelIndex())
         self.clearSelection()
 
     def on_selection_changed(self, current: 'QIndex', _: None) -> None:
