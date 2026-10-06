@@ -8,18 +8,7 @@ if TYPE_CHECKING:
     from ..gui.qt import QtWidgets
 
 
-def _cfg() -> 'ParameterGrp':
-    import FreeCAD  # noqa: PLC0415
-    return FreeCAD.ParamGet(  # type: ignore[return-value]
-        'User parameter:BaseApp/Preferences/Mod/Blueprints',
-    )
-
-
 class Settings:
-    @staticmethod
-    def load() -> 'ParameterGrp':
-        return _cfg()
-
     @staticmethod
     def getBool(key: str) -> bool:
         return _cfg().GetBool(key, False)
@@ -43,3 +32,23 @@ class Settings:
     @staticmethod
     def setWinSize(name: str, win: 'QtWidgets.QDialog') -> None:
         _cfg().SetString('winSize_' + name, f'{win.width()}x{win.height()}')
+
+    class View:
+        @staticmethod
+        def background_color() -> tuple[int, int, int, int]:
+            val = _cfg('View').GetUnsigned('BackgroundColor')
+            r = (val >> 24) & 0xff
+            g = (val >> 16) & 0xff
+            b = (val >> 8) & 0xff
+            a = val & 0xff
+            return r, g, b, a
+
+
+#################################################
+# Helper
+#################################################
+
+def _cfg(name: str = 'Mod/Blueprints') -> 'ParameterGrp':
+    import FreeCAD  # noqa: PLC0415
+    return FreeCAD.ParamGet(  # type: ignore[return-value]
+        'User parameter:BaseApp/Preferences/' + name)
