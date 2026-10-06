@@ -4,7 +4,7 @@ Exit current tool if another is selected.
 '''
 import FreeCADGui
 
-from ..helper.qt import QtGui, QtCore
+from ..gui.qt import QtGui, QtCore
 
 from typing import Callable
 

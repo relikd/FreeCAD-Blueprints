@@ -1,7 +1,7 @@
 '''
 Code related to triggering ESC hotkey.
 '''
-from ..helper.qt import QtCore, QtGui, QtWidgets
+from ..gui.qt import QtCore, QtGui, QtWidgets
 
 from typing import Callable
 

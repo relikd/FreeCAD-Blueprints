@@ -5,7 +5,7 @@ registration.
 import FreeCADGui
 
 from .events.doc_observer import DocObserver
-from .helper.qt import QtCore, QtWidgets
+from .gui.qt import QtCore, QtWidgets
 from .register_workbench import PseudoWorkbench
 
 

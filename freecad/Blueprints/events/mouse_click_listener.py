@@ -4,8 +4,8 @@ Code related to geometry selection (or plain sketch clicks without geometry).
 import FreeCADGui  # Selection
 from FreeCAD import Vector
 
+from ..gui.qt import QtCore
 from ..helper.georef import GeoId, GeoRef, PointPos
-from ..helper.qt import QtCore
 
 from typing import TYPE_CHECKING, Callable, NamedTuple
 

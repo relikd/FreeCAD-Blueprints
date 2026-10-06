@@ -4,15 +4,15 @@ GUI code for sketch selection (if multiple Sketches per document).
 from dataclasses import dataclass
 from functools import cached_property
 
+from .gui.qt import QtCore, QtWidgets, QuickGui
 from .helper.properties import Props
-from .helper.qt import QtCore, QtWidgets, QuickGui
 from .helper.settings import Settings
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .helper.qt import QtGui
     from Sketcher import SketchObject as Sketch
+    from .gui.qt import QtGui
 
 
 @dataclass

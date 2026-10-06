@@ -1,13 +1,13 @@
 '''
 Code related to changing the current cursor icon in the 3D navigation view.
 '''
-from ..helper.qt import QtCore, Icon
+from ..gui.qt import QtCore, Icon
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..helper.qt import QtWidgets
     from FreeCADGui import View3DInventorPy
+    from ..gui.qt import QtWidgets
 
 
 class MouseCursorListener(QtCore.QObject):

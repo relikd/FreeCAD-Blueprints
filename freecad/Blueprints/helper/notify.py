@@ -11,19 +11,19 @@ class Notify:
     @staticmethod
     def err(title: str, msg: str) -> None:
         ''' Show error dialog with simple "Ok" button. '''
-        from .qt import QtWidgets  # noqa: PLC0415
+        from ..gui.qt import QtWidgets  # noqa: PLC0415
         QtWidgets.QMessageBox.critical(None, title, msg)
 
     @staticmethod
     def warn(title: str, msg: str) -> None:
         ''' Show warning dialog with simple "Ok" button. '''
-        from .qt import QtWidgets  # noqa: PLC0415
+        from ..gui.qt import QtWidgets  # noqa: PLC0415
         QtWidgets.QMessageBox.warning(None, title, msg)
 
     @staticmethod
     def ask(title: str, msg: str) -> bool:
         ''' Ask Yes/No question. Returns `True` if user replied with "Yes". '''
-        from .qt import QtWidgets  # noqa: PLC0415
+        from ..gui.qt import QtWidgets  # noqa: PLC0415
         ans = QtWidgets.QMessageBox.question(None, title, msg)
         return ans == QtWidgets.QMessageBox.StandardButton.Yes
 

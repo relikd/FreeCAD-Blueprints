@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from FreeCAD import ParameterGrp
-    from .qt import QtWidgets
+    from ..gui.qt import QtWidgets
 
 
 def _cfg() -> 'ParameterGrp':

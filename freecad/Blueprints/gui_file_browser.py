@@ -5,7 +5,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from functools import cached_property
 
-from .helper.qt import QtCore, QtWidgets, MenuAction, Icon, QuickGui
+from .gui.qt import QtCore, QtWidgets, MenuAction, Icon, QuickGui
 from .helper.settings import Settings
 from .helper.utils import get_user_collection, open_in_file_manager
 
