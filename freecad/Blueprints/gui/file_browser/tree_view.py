@@ -1,110 +1,104 @@
+from pathlib import Path
 from ..qt import QtCore, QtWidgets
-from .entry import Node
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    QIndex = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
 
-def _build_tree(root_dir: 'Path') -> Node:
-    root = Node(path=root_dir.resolve(), is_dir=True)
-    queue = [root]
-    i = 0
-    while i < len(queue):
-        parent: Node = queue[i]
-        i += 1
-        for child in parent.children:
-            parent.widget.addChild(child.widget)
-            if child.is_dir:
-                queue.append(child)
-    return root
-
-
-class TreeWidget(QtWidgets.QTreeWidget):
+class TreeView(QtWidgets.QTreeView):
     validated = QtCore.Signal(int)
 
     def __init__(self, root_dir: 'Path') -> None:
         super().__init__()
-        self.has_valid_selection = False
 
-        self.root_node = _build_tree(root_dir)
+        source = QtWidgets.QFileSystemModel(self)
+        source.setFilter(
+            QtCore.QDir.Filter.AllDirs |
+            QtCore.QDir.Filter.Files |
+            QtCore.QDir.Filter.NoDotAndDotDot)
 
+        root_node = source.setRootPath(str(root_dir))
+
+        proxy = FileFilter(source, self)
+        self.setModel(proxy)
+        self.setRootIndex(proxy.mapFromSource(root_node))
         self.setHeaderHidden(True)
-        self.setColumnCount(1)
-        self.addTopLevelItem(self.root_node.widget)
-        self.setRootIndex(self.indexFromItem(self.root_node.widget))
-        self.currentItemChanged.connect(self.on_selection_changed)
-        self.itemExpanded.connect(self.on_expand_toggle)
-        self.itemCollapsed.connect(self.on_expand_toggle)
+        self.selectionModel().currentChanged.connect(self.on_selection_changed)
 
-    def _selection_valid(self, sel: 'QtWidgets.QTreeWidgetItem|None') -> bool:
-        if not sel or sel.isHidden():
-            return False
-        node = node_of(sel)
-        return not node.is_dir and node.path.exists()
+        # show only name column
+        for column in range(1, source.columnCount()):
+            self.hideColumn(column)
 
-    def on_selection_changed(
-        self, current: 'QtWidgets.QTreeWidgetItem|None', _previous: None,
-    ) -> None:
+        # directories are loaded asynchronously, need to expand recursively
+        source.directoryLoaded.connect(lambda x:
+            None if Path(x).name.startswith('.') else self.expandAll())
+        self.expandAll()
+
+    @property
+    def filter(self) -> 'FileFilter':
+        return self.model()  # type: ignore[return-value]
+
+    def apply_initial(self) -> None:
+        ''' Call after validated is wired. '''
+        self.on_selection_changed(self.currentIndex(), None)
+
+    def on_selection_changed(self, current: 'QIndex', _: None) -> None:
         ''' Auto-enable Ok button on valid selection. '''
-        self.has_valid_selection = self._selection_valid(current)
-        self.validated.emit(self.has_valid_selection)
+        path = self.filter.path_for(current)
+        self.validated.emit(path and path.exists() and not path.is_dir())
 
-    def on_expand_toggle(self, item: QtWidgets.QTreeWidgetItem) -> None:
-        ''' Update Node on expand change. '''
-        node_of(item).expanded = item.isExpanded()
-
-    def apply_filter(self, text: str) -> None:
-        ''' Filter entries on search query change. '''
-        search_active = bool(text)
-        search_term = text.lower()
-        queue = [self.root_node]
-        i = 0
-        is_first = True
-        while i < len(queue):
-            for child in queue[i].children:
-                if child.is_dir:
-                    queue.append(child)
-                else:
-                    hidden = search_term not in child.plain_name
-                    child.widget.setHidden(hidden)
-                    # select first non-dir item to allow confirm with return
-                    if is_first and not hidden:
-                        is_first = False
-                        self.setCurrentItem(child.widget)
-            i += 1
-
-        if is_first:
-            self.setCurrentItem(None)  # type: ignore[call-overload]
-
-        # disable while searching to not change user-expanded items
-        self.itemExpanded.disconnect()
-
-        # for all dirs, expand or collapse
-        for item in reversed(queue):
-            hidden = all(x.widget.isHidden() for x in item.children)
-            item.widget.setHidden(hidden)
-            item.widget.setExpanded(True if search_active else item.expanded)
-
-        # re-enable after search
-        self.itemExpanded.connect(self.on_expand_toggle)
-
-    def selected_node(self, *, allowDir: bool = False) -> 'Node|None':
-        ''' Return current selection if Node is a file item. '''
-        if items := self.selectedItems():
-            node = node_of(items[0])
-            if not node.path.exists():
-                return None  # if someone modified files while GUI was open
-            if not node.is_dir or allowDir:
-                return node
+    def get_selected(self, *, allowDir: bool = False) -> 'Path|None':
+        ''' Return current selection. By default: only if file selected. '''
+        if path := self.filter.path_for(self.currentIndex()):
+            # file may not exist if someone deleted while GUI was open
+            if path.exists() and (not path.is_dir() or allowDir):
+                return path
         return None
 
 
 #################################################
-# Helper
+# Filter
 #################################################
 
-def node_of(widget: 'QtWidgets.QTreeWidgetItem') -> 'Node':
-    ''' Helper calls: `widget.data(0, QtCore.Qt.ItemDataRole.UserRole)` '''
-    return widget.data(0, QtCore.Qt.ItemDataRole.UserRole)
+class FileFilter(QtCore.QSortFilterProxyModel):
+    EXT: Final = '.FCStd'.lower()
+
+    def __init__(self, source: QtWidgets.QFileSystemModel, parent: TreeView) \
+            -> None:
+        super().__init__(parent)
+        self._query = ''
+        self._root = source.rootPath()
+        self.setSourceModel(source)
+        self.setRecursiveFilteringEnabled(True)
+
+    def set_query(self, query: str) -> None:
+        self._query = query.casefold()
+        self.invalidateFilter()
+
+    @property
+    def model(self) -> QtWidgets.QFileSystemModel:
+        return self.sourceModel()  # type: ignore[return-value]
+
+    def path_for(self, index: 'QIndex') -> 'Path|None':
+        rv = self.model.filePath(self.mapToSource(index))
+        return Path(rv) if rv else None
+
+    def filterAcceptsRow(self, row: int, parent: 'QIndex') -> bool:
+        source = self.model
+        index = source.index(row, 0, parent)
+        path = Path(source.filePath(index)).resolve()
+
+        if path.name.startswith('.'):
+            return False  # ignore hidden
+
+        if source.isDir(index):
+            # we could return False during search to hide empty dirs, but that
+            # would invalidate the underlying index and unset expanded state.
+            # IF we decide to go that way, return True for path == self._root,
+            # or else the index invalidation sets root to "/"
+            return True
+
+        return path.suffix.lower() == self.EXT \
+            and self._query in str(path).removeprefix(self._root).casefold()

@@ -13,8 +13,8 @@ def open_blueprint_browser() -> 'Path|None':
     dialog = FileBrowser(root)
 
     if dialog.exec() == QtWidgets.QDialog.DialogCode.Accepted:
-        if node := dialog.get_selected():
+        if path := dialog.get_selected():
             dialog.deleteLater()
-            return node.path
+            return path
     dialog.deleteLater()
     return None
