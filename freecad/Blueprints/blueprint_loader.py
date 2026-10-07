@@ -4,7 +4,7 @@ Code related to loading a Sketch document from disk (with user interaction).
 import FreeCAD
 
 from .helper.notify import Notify
-from .gui_file_browser import open_blueprint_browser
+from .gui.file_browser import open_blueprint_browser
 from .gui.sketch_choice import open_sketch_chooser
 
 from typing import TYPE_CHECKING
