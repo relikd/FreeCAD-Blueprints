@@ -1,5 +1,5 @@
 from ...helper.settings import Settings
-from ..qt import QtWidgets, QuickGui, SyncedCheckbox
+from ..qt import QtWidgets, QuickGui, SearchBar, SyncedCheckbox
 from .entry import DataItem
 from .list_view import ListView
 
@@ -12,7 +12,7 @@ class Window(QtWidgets.QDialog):
         self.resize(*Settings.getWinSize('SketchChoice', (650, 450)))
 
         # Search
-        search_bar = QuickGui.search_bar(self)
+        search_bar = SearchBar(self, 'Search ...')
         chk = SyncedCheckbox('incl. desc', pref='searchSketchDescription')
 
         # List

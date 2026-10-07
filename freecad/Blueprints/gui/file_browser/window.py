@@ -1,6 +1,6 @@
 from ...helper.settings import Settings
 from ...helper.utils import open_in_file_manager
-from ..qt import QtCore, QtWidgets, MenuAction, QuickGui
+from ..qt import QtCore, QtWidgets, MenuAction, QuickGui, SearchBar
 from .tree_view import TreeView
 
 from typing import TYPE_CHECKING
@@ -17,7 +17,7 @@ class FileBrowser(QtWidgets.QDialog):
         self.resize(*Settings.getWinSize('FileBrowser', (400, 550)))
 
         # Search bar
-        search_bar = QuickGui.search_bar(self)
+        search_bar = SearchBar(self, 'Search ...')
 
         # Tree
         tree = TreeView(root_dir)

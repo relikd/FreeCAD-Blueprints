@@ -72,21 +72,6 @@ class QuickGui:
         rv.rejected.connect(parent.reject)
         return rv, rv.button(QtWidgets.QDialogButtonBox.StandardButton.Ok)
 
-    @staticmethod
-    def search_bar(parent: QtWidgets.QDialog, placeholder: str = 'Search ...')\
-            -> 'NavigatableLineEdit':
-        ''' Create a search bar with hotkey `Ctrl+F`. '''
-        rv = NavigatableLineEdit()
-        rv.setPlaceholderText(placeholder)
-
-        def set_focus() -> None:
-            rv.setFocus()
-            rv.selectAll()
-
-        shortcut = QtGui.QShortcut(QtGui.QKeySequence('Ctrl+F'), parent)
-        shortcut.activated.connect(set_focus)
-        return rv
-
 
 class SyncedCheckbox(QtWidgets.QCheckBox):
     ''' Checkbox state is loaded from & synced back to user settings. '''
@@ -94,7 +79,6 @@ class SyncedCheckbox(QtWidgets.QCheckBox):
 
     def __init__(self, label: str, *, pref: str) -> None:
         super().__init__(label)
-
         self.setChecked(Settings.getBool(pref))
 
         def fn(newState: QtCore.Qt.CheckState) -> None:
@@ -105,8 +89,8 @@ class SyncedCheckbox(QtWidgets.QCheckBox):
         self.checkStateChanged.connect(fn)
 
 
-class NavigatableLineEdit(QtWidgets.QLineEdit):
-    ''' Create key-bindings for up- down keys. '''
+class SearchBar(QtWidgets.QLineEdit):
+    ''' Create a search bar with hotkey `Ctrl+F` and up/down key-bindings. '''
     on_up_down = QtCore.Signal(bool)
 
     NO_MODIFIERS = ~(
@@ -115,6 +99,17 @@ class NavigatableLineEdit(QtWidgets.QLineEdit):
         | QtCore.Qt.KeyboardModifier.AltModifier
         | QtCore.Qt.KeyboardModifier.MetaModifier
     )
+
+    def __init__(self, parent: 'QtWidgets.QDialog', placeholder: str) -> None:
+        super().__init__(parent)
+        self.setPlaceholderText(placeholder)
+
+        def set_focus() -> None:
+            self.setFocus()
+            self.selectAll()
+
+        shortcut = QtGui.QShortcut(QtGui.QKeySequence('Ctrl+F'), parent)
+        shortcut.activated.connect(set_focus)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if event.modifiers() & self.NO_MODIFIERS:
