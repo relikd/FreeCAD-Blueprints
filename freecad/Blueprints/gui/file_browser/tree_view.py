@@ -70,7 +70,7 @@ class FileFilter(QtCore.QSortFilterProxyModel):
             -> None:
         super().__init__(parent)
         self._query = ''
-        self._root = source.rootPath()
+        # self._root = source.rootPath()
         self.setSourceModel(source)
         self.setRecursiveFilteringEnabled(True)
 
@@ -102,4 +102,4 @@ class FileFilter(QtCore.QSortFilterProxyModel):
             return True
 
         return path.suffix.lower() == self.EXT \
-            and self._query in str(path).removeprefix(self._root).casefold()
+            and self._query in path.with_suffix('').name.casefold()
