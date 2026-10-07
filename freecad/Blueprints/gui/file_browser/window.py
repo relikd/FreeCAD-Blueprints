@@ -23,6 +23,7 @@ class FileBrowser(QtWidgets.QDialog):
 
         # Search bar
         search_bar = QuickGui.search_bar(self, tree.filter.set_query)
+        search_bar.on_up_down.connect(self.on_up_down)
 
         # Right-click context menu
         tree.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.ActionsContextMenu)
@@ -45,6 +46,14 @@ class FileBrowser(QtWidgets.QDialog):
     def save_settings(self, _: int) -> None:
         ''' Persist window size in settings. '''
         Settings.setWinSize('FileBrowser', self)
+
+    def on_up_down(self, up: bool) -> None:  # noqa: FBT001
+        ''' React to up-down arrow keys. '''
+        idx = self.tree.currentIndex()
+        idx = self.tree.indexAbove(idx) if up else self.tree.indexBelow(idx)
+        if idx.isValid():
+            self.tree.setCurrentIndex(idx)
+            self.tree.scrollTo(idx)
 
     def on_open_fm(self) -> 'Path|None':
         ''' Open in file manager. '''

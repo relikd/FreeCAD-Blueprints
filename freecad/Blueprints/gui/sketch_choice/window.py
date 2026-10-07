@@ -18,7 +18,9 @@ class Window(QtWidgets.QDialog):
 
         # Search
         search = QtWidgets.QHBoxLayout()
-        search.addWidget(QuickGui.search_bar(self, list_view.filter.setQuery))
+        search_bar = QuickGui.search_bar(self, list_view.filter.setQuery)
+        search_bar.on_up_down.connect(self.on_up_down)
+        search.addWidget(search_bar)
         search.addWidget(QuickGui.checkbox(
             'incl. desc', pref='searchSketchDescription',
             # init triggers on_change -> user-preferences are auto-applied
@@ -39,6 +41,15 @@ class Window(QtWidgets.QDialog):
     def save_settings(self, _: int) -> None:
         ''' Persist window size in settings. '''
         Settings.setWinSize('SketchChoice', self)
+
+    def on_up_down(self, up: bool) -> None:  # noqa: FBT001
+        ''' React to up-down arrow keys. '''
+        idx = self.list_view.currentIndex()
+        model = self.list_view.model()
+        idx = model.index(idx.row() + (-1 if up else 1), idx.column())
+        if idx.isValid():
+            self.list_view.setCurrentIndex(idx)
+            self.list_view.scrollTo(idx)
 
     def get_selected(self) -> 'DataItem|None':
         ''' Return selection (if any). '''

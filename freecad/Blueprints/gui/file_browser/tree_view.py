@@ -24,6 +24,7 @@ class TreeView(QtWidgets.QTreeView):
         proxy = FileFilter(source, self)
         self.setModel(proxy)
         self.setRootIndex(proxy.mapFromSource(root_node))
+        self.setCurrentIndex(self.rootIndex())
         self.setHeaderHidden(True)
         self.selectionModel().currentChanged.connect(self.on_selection_changed)
 

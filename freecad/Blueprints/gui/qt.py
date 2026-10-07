@@ -78,9 +78,9 @@ class QuickGui:
         on_search: Callable[[str], None],
         *,
         placeholder: str = 'Search ...',
-    ) -> QtWidgets.QLineEdit:
+    ) -> 'NavigatableLineEdit':
         ''' Create a search bar with hotkey `Ctrl+F`. '''
-        rv = QtWidgets.QLineEdit()
+        rv = NavigatableLineEdit()
         rv.setPlaceholderText(placeholder)
         rv.textChanged.connect(on_search)
 
@@ -110,3 +110,24 @@ class QuickGui:
         rv.checkStateChanged.connect(fn)
         on_change(rv.isChecked())
         return rv
+
+
+class NavigatableLineEdit(QtWidgets.QLineEdit):
+    ''' Create key-bindings for up- down keys. '''
+    on_up_down = QtCore.Signal(bool)
+
+    NO_MODIFIERS = ~(
+        QtCore.Qt.KeyboardModifier.ShiftModifier
+        | QtCore.Qt.KeyboardModifier.ControlModifier
+        | QtCore.Qt.KeyboardModifier.AltModifier
+        | QtCore.Qt.KeyboardModifier.MetaModifier
+    )
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        if event.modifiers() & self.NO_MODIFIERS:
+            key = event.key()
+            if key in (QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down):
+                self.on_up_down.emit(key == QtCore.Qt.Key.Key_Up)
+                event.accept()
+                return
+        super().keyPressEvent(event)
