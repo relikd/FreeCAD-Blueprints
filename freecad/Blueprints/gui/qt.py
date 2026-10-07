@@ -73,16 +73,11 @@ class QuickGui:
         return rv, rv.button(QtWidgets.QDialogButtonBox.StandardButton.Ok)
 
     @staticmethod
-    def search_bar(
-        parent: QtWidgets.QDialog,
-        on_search: Callable[[str], None],
-        *,
-        placeholder: str = 'Search ...',
-    ) -> 'NavigatableLineEdit':
+    def search_bar(parent: QtWidgets.QDialog, placeholder: str = 'Search ...')\
+            -> 'NavigatableLineEdit':
         ''' Create a search bar with hotkey `Ctrl+F`. '''
         rv = NavigatableLineEdit()
         rv.setPlaceholderText(placeholder)
-        rv.textChanged.connect(on_search)
 
         def set_focus() -> None:
             rv.setFocus()
@@ -92,24 +87,22 @@ class QuickGui:
         shortcut.activated.connect(set_focus)
         return rv
 
-    @staticmethod
-    def checkbox(
-        label: str,
-        *,
-        pref: str,
-        on_change: Callable[[bool], None],
-    ) -> QtWidgets.QCheckBox:
-        rv = QtWidgets.QCheckBox(label)
-        rv.setChecked(Settings.getBool(pref))
+
+class SyncedCheckbox(QtWidgets.QCheckBox):
+    ''' Checkbox state is loaded from & synced back to user settings. '''
+    on_change = QtCore.Signal(bool)
+
+    def __init__(self, label: str, *, pref: str) -> None:
+        super().__init__(label)
+
+        self.setChecked(Settings.getBool(pref))
 
         def fn(newState: QtCore.Qt.CheckState) -> None:
             flag = newState == QtCore.Qt.CheckState.Checked
             Settings.setBool(pref, flag)
-            on_change(flag)
+            self.on_change.emit(flag)
 
-        rv.checkStateChanged.connect(fn)
-        on_change(rv.isChecked())
-        return rv
+        self.checkStateChanged.connect(fn)
 
 
 class NavigatableLineEdit(QtWidgets.QLineEdit):

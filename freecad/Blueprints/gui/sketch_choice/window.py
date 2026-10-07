@@ -1,5 +1,5 @@
 from ...helper.settings import Settings
-from ..qt import QtWidgets, QuickGui
+from ..qt import QtWidgets, QuickGui, SyncedCheckbox
 from .entry import DataItem
 from .list_view import ListView
 
@@ -11,32 +11,35 @@ class Window(QtWidgets.QDialog):
         self.setWindowTitle('Select item')
         self.resize(*Settings.getWinSize('SketchChoice', (650, 450)))
 
+        # Search
+        search_bar = QuickGui.search_bar(self)
+        chk = SyncedCheckbox('incl. desc', pref='searchSketchDescription')
+
         # List
         list_view = ListView(choices)
-        list_view.doubleClicked.connect(self.accept)
         self.list_view = list_view
-
-        # Search
-        search = QtWidgets.QHBoxLayout()
-        search_bar = QuickGui.search_bar(self, list_view.filter.setQuery)
-        search_bar.on_up_down.connect(self.on_up_down)
-        search.addWidget(search_bar)
-        search.addWidget(QuickGui.checkbox(
-            'incl. desc', pref='searchSketchDescription',
-            # init triggers on_change -> user-preferences are auto-applied
-            on_change=lambda x: list_view.filter.setOptions(desc=x)))
 
         # Buttons
         buttons, self.accept_button = QuickGui.buttons(self, abort=True)
-        # auto-enable accept button on selection change
-        list_view.validated.connect(self.accept_button.setEnabled)
 
+        search = QtWidgets.QHBoxLayout()
+        search.addWidget(search_bar)
+        search.addWidget(chk)
         layout = QtWidgets.QVBoxLayout(self)
         layout.addLayout(search)
         layout.addWidget(list_view)
         layout.addWidget(buttons)
 
+        # interconnections
+        search_bar.textChanged.connect(list_view.filter.setQuery)
+        search_bar.on_up_down.connect(self.on_up_down)
+        chk.on_change.connect(lambda x: list_view.filter.setOptions(desc=x))
+        list_view.doubleClicked.connect(self.accept)
+        list_view.validated.connect(self.accept_button.setEnabled)
         self.finished.connect(self.save_settings)
+
+        # initial state
+        list_view.filter.setOptions(desc=chk.isChecked())
 
     def save_settings(self, _: int) -> None:
         ''' Persist window size in settings. '''

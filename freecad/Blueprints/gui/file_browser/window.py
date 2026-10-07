@@ -16,14 +16,12 @@ class FileBrowser(QtWidgets.QDialog):
         self.setWindowTitle('Choose Blueprint')
         self.resize(*Settings.getWinSize('FileBrowser', (400, 550)))
 
+        # Search bar
+        search_bar = QuickGui.search_bar(self)
+
         # Tree
         tree = TreeView(root_dir)
-        tree.doubleClicked.connect(self.accept)
         self.tree = tree
-
-        # Search bar
-        search_bar = QuickGui.search_bar(self, tree.filter.set_query)
-        search_bar.on_up_down.connect(self.on_up_down)
 
         # Right-click context menu
         tree.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.ActionsContextMenu)
@@ -31,9 +29,6 @@ class FileBrowser(QtWidgets.QDialog):
 
         # Buttons
         buttons, self.accept_button = QuickGui.buttons(self, cancel=True)
-        # auto-enable accept button on selection change
-        tree.validated.connect(self.accept_button.setEnabled)
-        tree.apply_initial()
 
         # Layout
         layout = QtWidgets.QVBoxLayout(self)
@@ -41,7 +36,14 @@ class FileBrowser(QtWidgets.QDialog):
         layout.addWidget(tree)
         layout.addWidget(buttons)
 
+        # interconnections
+        search_bar.textChanged.connect(tree.filter.set_query)
+        search_bar.on_up_down.connect(self.on_up_down)
+        tree.doubleClicked.connect(self.accept)
+        tree.validated.connect(self.accept_button.setEnabled)
         self.finished.connect(self.save_settings)
+
+        tree.apply_initial()
 
     def save_settings(self, _: int) -> None:
         ''' Persist window size in settings. '''
