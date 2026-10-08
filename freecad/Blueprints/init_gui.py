@@ -10,3 +10,6 @@ from .register_workbench import PseudoWorkbench
 FreeCADGui.addIconPath(str(RES_ROOT / 'icons'))
 
 FreeCADGui.addWorkbenchManipulator(PseudoWorkbench())
+
+# from .dev import add_global_test_button
+# add_global_test_button()
