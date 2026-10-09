@@ -48,7 +48,7 @@ class Blueprints_Add_Cmd:
             return
 
         if blueprint := chooseBlueprint():
-            BlueprintInserter.cancel_previous()
+            BlueprintInserter.cancel_previous(keepOpen=blueprint)
             # cancel any current geometry or constraint tool
             FreeCADGui.runCommand('Sketcher_StopOperation', 0)
             BlueprintInserter(currentSketch, blueprint)

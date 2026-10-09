@@ -24,10 +24,11 @@ _SESSIONS: list['BlueprintInserter'] = []
 
 class BlueprintInserter:
     @staticmethod
-    def cancel_previous() -> None:
+    def cancel_previous(*, keepOpen: 'Sketch') -> None:
         ''' Cancel any previous insert session. '''
         for prev in _SESSIONS:
-            prev.close()
+            same_doc = prev.blueprint.Document.Name == keepOpen.Document.Name
+            prev.close(keepOpen=same_doc)
 
     def __init__(self, current: 'Sketch', blueprint: 'Sketch') -> None:
         doc = FreeCADGui.ActiveDocument
@@ -60,6 +61,7 @@ class BlueprintInserter:
         *,
         postponeCursorCleanup: bool = False,
         reopenInEditMode: bool = False,
+        keepOpen: bool = False,
     ) -> None:
         _SESSIONS.remove(self)
         self.cursor_monitor.stop(cleanupLater=postponeCursorCleanup)
@@ -78,7 +80,7 @@ class BlueprintInserter:
             new_sketch = reloadSketch(self.blueprint, hidden=False)
             if doc := FreeCADGui.ActiveDocument:
                 doc.setEdit(new_sketch)
-        else:
+        elif not keepOpen:
             FreeCAD.closeDocument(self.blueprint.Document.Name)
         del self.blueprint
         del self.current
