@@ -1,10 +1,16 @@
 '''
 Code related to triggering ESC hotkey.
 '''
+import FreeCADGui
 from ..gui.qt import QtCore, QtGui, QtWidgets
 
 from typing import Callable
 
+
+# the correct way would be to use:
+#   ViewProviderSketch::activateHandler + ViewProviderSketch::keyPressed
+# but that isnt exposed to python
+# see https://github.com/FreeCAD/FreeCAD/blob/main/src/Mod/Sketcher/Gui/ViewProviderSketch.cpp
 
 class EscListener(QtCore.QObject):
     '''
@@ -29,10 +35,17 @@ class EscListener(QtCore.QObject):
     def eventFilter(self, _obj: QtCore.QObject, event: QtCore.QEvent) -> bool:
         if (
             isinstance(event, QtGui.QKeyEvent)
+            # Dialogs react to KeyPress, sketcher tools react to KeyRelease.
+            # We cannot fix both. Escaping a dialog will exit sketcher tool.
             and event.type() == QtCore.QEvent.Type.KeyPress
             and event.key() == QtCore.Qt.Key.Key_Escape
         ):
-            if self.callback():
+            # only close if main window == active window. Allows ESC on dialogs
+            if focus_on_main_window() and self.callback():
                 event.accept()
                 return True
         return False
+
+
+def focus_on_main_window() -> bool:
+    return QtWidgets.QApplication.activeWindow() == FreeCADGui.getMainWindow()

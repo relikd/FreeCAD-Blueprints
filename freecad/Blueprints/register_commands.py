@@ -36,8 +36,6 @@ class Blueprints_Add_Cmd:
 
     def Activated(self) -> None:
         ''' Open sketch from another file. '''
-        BlueprintInserter.cancel_previous()
-
         thisDoc = FreeCAD.ActiveDocument
         if not thisDoc:
             Notify.err('No Active Document', 'No active document found.')
@@ -50,6 +48,7 @@ class Blueprints_Add_Cmd:
             return
 
         if blueprint := chooseBlueprint():
+            BlueprintInserter.cancel_previous()
             # cancel any current geometry or constraint tool
             FreeCADGui.runCommand('Sketcher_StopOperation', 0)
             BlueprintInserter(currentSketch, blueprint)

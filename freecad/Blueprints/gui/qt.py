@@ -15,16 +15,16 @@ else:
 
 
 class Icon:
-    @staticmethod
-    def folder() -> QtGui.QIcon:
-        ''' Shown in file browser. Regular folder / directory icon. '''
-        return QtWidgets.QApplication.style().standardIcon(
-            QtWidgets.QStyle.StandardPixmap.SP_DirIcon)
+    # @staticmethod
+    # def folder() -> QtGui.QIcon:
+    #     ''' Shown in file browser. Regular folder / directory icon. '''
+    #     return QtWidgets.QApplication.style().standardIcon(
+    #         QtWidgets.QStyle.StandardPixmap.SP_DirIcon)
 
-    @staticmethod
-    def freecad_file() -> QtGui.QPixmap:
-        ''' Shown in file browser. FreeCAD app icon for `.FCStd` files. '''
-        return QtGui.QPixmap(RES_ROOT / 'icons' / 'freecad-document.svg')
+    # @staticmethod
+    # def freecad_file() -> QtGui.QPixmap:
+    #     ''' Shown in file browser. FreeCAD app icon for `.FCStd` files. '''
+    #     return QtGui.QPixmap(RES_ROOT / 'icons' / 'freecad-document.svg')
 
     @staticmethod
     def blueprint_cursor() -> QtGui.QCursor:

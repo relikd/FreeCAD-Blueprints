@@ -8,7 +8,7 @@ from ..gui.qt import QtGui, QtCore
 
 from typing import Callable
 
-IGNORED = {'Std_Undo', 'Std_Redo'}
+IGNORED = {'Std_Undo', 'Std_Redo', 'Blueprints_Add'}
 
 
 class ActionListener(QtCore.QObject):
