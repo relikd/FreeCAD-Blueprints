@@ -1,6 +1,5 @@
 from ...helper.settings import Settings
-from ...helper.utils import open_in_file_manager
-from ..qt import QtCore, QtWidgets, MenuAction, QuickGui, SearchBar
+from ..qt import QtCore, QtWidgets, OpenFileLocationAction, QuickGui, SearchBar
 from .tree_view import TreeView
 
 from typing import TYPE_CHECKING
@@ -25,7 +24,7 @@ class FileBrowser(QtWidgets.QDialog):
 
         # Right-click context menu
         tree.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.ActionsContextMenu)
-        MenuAction.open_file_location(tree, self.on_open_fm)
+        OpenFileLocationAction(self.on_open_fm).addTo(tree)
 
         # Buttons
         buttons, self.accept_button = QuickGui.buttons(self, cancel=True)
@@ -58,9 +57,8 @@ class FileBrowser(QtWidgets.QDialog):
             self.tree.scrollTo(idx)
 
     def on_open_fm(self) -> 'Path|None':
-        ''' Open in file manager. '''
-        if path := self.tree.get_selected(allowDir=True):
-            open_in_file_manager(path)
+        ''' Get path for "Open in file manager". '''
+        return self.tree.get_selected(allowDir=True)
 
     def accept(self) -> None:
         ''' Ensure double-click has a valid target. '''

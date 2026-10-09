@@ -2,14 +2,16 @@
 Code related to Qt simplifications and shared UI componentes.
 '''
 import sys
+from pathlib import Path
 
-from ..helper.utils import RES_ROOT
+from ..helper.utils import RES_ROOT, open_in_file_manager
 from ..helper.settings import Settings
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:  # switch between "PySide6" (dev) and "PySide" (dist)
     from PySide6 import QtCore, QtGui, QtWidgets
+    PathResolvable = Callable[[], Path | str | None] | Path | str | None
 else:
     from PySide import QtCore, QtGui, QtWidgets
 
@@ -34,20 +36,36 @@ class Icon:
         return QtGui.QCursor(svg, 8, 8)
 
 
-class MenuAction:
-    @staticmethod
-    def open_file_location(parent: QtWidgets.QWidget, func: object) \
-            -> QtGui.QAction:
-        ''' Create action and attach it to `parent` via `addAction()`. '''
+class OpenFileLocationAction(QtGui.QAction):
+    '''`path_fn` takes either static path or function returning path.'''
+
+    def __init__(self, path_fn: 'PathResolvable') -> None:
         if sys.platform == 'darwin':
-            act = QtGui.QAction('Reveal in Finder', parent)
-            act.setStatusTip('Reveals the current file location in Finder')
+            super().__init__('Reveal in Finder')
+            self.setStatusTip('Reveals the current file location in Finder')
         else:
-            act = QtGui.QAction('Open File Location', parent)
-            act.setStatusTip('Opens the current file location')
-        act.triggered.connect(func)
-        parent.addAction(act)
-        return act
+            super().__init__('Open File Location')
+            self.setStatusTip('Opens the current file location')
+
+        self.callback = path_fn
+        self.triggered.connect(self._open_in_fm)
+
+    def addTo(self, parent: 'QtWidgets.QWidget') -> None:
+        ''' Add action and set parent. '''
+        # Sadly, `addAction` alone does not set parent.
+        # And without a parent, the action does not trigger.
+        parent.addAction(self)
+        self.setParent(parent)
+
+    def _open_in_fm(self) -> None:
+        ''' Resolve path and open filemanager. '''
+        rv = self.callback
+        if callable(rv):
+            rv = rv()
+        if rv:
+            if isinstance(rv, str):
+                rv = Path(rv)
+            open_in_file_manager(rv)
 
 
 class QuickGui:
