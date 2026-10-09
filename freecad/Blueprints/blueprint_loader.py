@@ -77,14 +77,17 @@ def _loadSketchFromDoc(doc: 'Document') -> 'Sketch|None':
 #
 # The root cause is likely some modified document state or a FreeCAD bug.
 # Hopefully this reload can be omitted at some point.
-def reloadSketch(sketch: 'Sketch') -> 'Sketch':
-    ''' Reload sketch from disk. '''
+def reloadSketch(sketch: 'Sketch', *, hidden: bool = True) -> 'Sketch':
+    ''' Reload sketch from disk. If `hidden`, reset focus to current doc. '''
     activeDoc = FreeCAD.ActiveDocument
     sketch_id = sketch.ID
     path = sketch.Document.FileName
     # TODO: replace with `doc.restore()` once #33181 is fixed
     FreeCAD.closeDocument(sketch.Document.Name)
-    doc = FreeCAD.openDocument(path, hidden=True, temporary=True)  # type: ignore[call-arg]
-    if activeDoc:
-        FreeCAD.setActiveDocument(activeDoc.Name)  # restore Focus
+    if hidden:
+        doc = FreeCAD.openDocument(path, hidden=True, temporary=True)  # type: ignore[call-arg]
+        if activeDoc:
+            FreeCAD.setActiveDocument(activeDoc.Name)  # restore Focus
+    else:
+        doc = FreeCAD.openDocument(path)  # keep focus on new document
     return doc.getObject(sketch_id)

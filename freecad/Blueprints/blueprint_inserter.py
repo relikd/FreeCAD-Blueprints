@@ -52,7 +52,12 @@ class BlueprintInserter:
         # self-close on exiting Sketcher Edit Mode
         self.doc_monitor = DocObserver(onEditEnd=self.on_end_editing)
 
-    def close(self, *, postponeCursorCleanup: bool = False) -> None:
+    def close(
+        self,
+        *,
+        postponeCursorCleanup: bool = False,
+        reopenInEditMode: bool = False,
+    ) -> None:
         _SESSIONS.remove(self)
         self.cursor_monitor.stop(cleanupLater=postponeCursorCleanup)
         self.click_monitor.stop()
@@ -64,7 +69,12 @@ class BlueprintInserter:
         del self.action_monitor
         del self.esc_monitor
         del self.doc_monitor
-        FreeCAD.closeDocument(self.blueprint.Document.Name)
+        if reopenInEditMode:
+            new_sketch = reloadSketch(self.blueprint, hidden=False)
+            if doc := FreeCADGui.ActiveDocument:
+                doc.setEdit(new_sketch)
+        else:
+            FreeCAD.closeDocument(self.blueprint.Document.Name)
         del self.blueprint
         del self.current
 
