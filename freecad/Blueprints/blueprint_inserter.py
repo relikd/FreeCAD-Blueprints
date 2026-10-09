@@ -9,6 +9,7 @@ from .events.doc_observer import DocObserver
 from .events.esc_listener import EscListener
 from .events.mouse_click_listener import MouseClickListener, UserSelection
 from .events.mouse_cursor_listener import MouseCursorListener
+from .gui.sketcher_tool import BlueprintSketcherTool
 from .blueprint_duplicator import BlueprintDuplicator
 from .blueprint_loader import reloadSketch
 
@@ -51,6 +52,8 @@ class BlueprintInserter:
         self.esc_monitor = EscListener(self.on_esc)
         # self-close on exiting Sketcher Edit Mode
         self.doc_monitor = DocObserver(onEditEnd=self.on_end_editing)
+        # add option buttons to sketcher task panel
+        self.sketcher_tool = BlueprintSketcherTool(self)
 
     def close(
         self,
@@ -64,11 +67,13 @@ class BlueprintInserter:
         self.action_monitor.stop()
         self.esc_monitor.stop()
         self.doc_monitor.stop()
+        self.sketcher_tool.cleanup(close=not postponeCursorCleanup)
         del self.cursor_monitor
         del self.click_monitor
         del self.action_monitor
         del self.esc_monitor
         del self.doc_monitor
+        del self.sketcher_tool
         if reopenInEditMode:
             new_sketch = reloadSketch(self.blueprint, hidden=False)
             if doc := FreeCADGui.ActiveDocument:

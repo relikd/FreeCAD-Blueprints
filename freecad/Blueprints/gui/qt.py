@@ -29,6 +29,11 @@ class Icon:
     #     return QtGui.QPixmap(RES_ROOT / 'icons' / 'freecad-document.svg')
 
     @staticmethod
+    def blueprint_toolbar() -> QtGui.QPixmap:
+        ''' Shown in Sketcher tool extension box. '''
+        return QtGui.QPixmap(RES_ROOT / 'icons' / 'toolbar.svg')
+
+    @staticmethod
     def blueprint_cursor() -> QtGui.QCursor:
         ''' Mouse cursor shown while inserting blueprint. '''
         svg = QtGui.QPixmap(RES_ROOT / 'icons' / 'cursor.svg')
@@ -138,3 +143,28 @@ class SearchBar(QtWidgets.QLineEdit):
                 event.accept()
                 return
         super().keyPressEvent(event)
+
+
+class ElidedButton(QtWidgets.QPushButton):
+    ''' Button that automatically resizes to trim excessive text. '''
+    def __init__(self, text: str, parent: 'QtWidgets.QWidget|None' = None) \
+            -> None:
+        super().__init__(text, parent)
+        self._full_text: str = text
+        self._update_elided_text()
+
+    def minimumSizeHint(self) -> QtCore.QSize:
+        hint = super().minimumSizeHint()
+        return QtCore.QSize(0, hint.height())
+
+    def resizeEvent(self, event: 'QtGui.QResizeEvent') -> None:
+        super().resizeEvent(event)
+        self._update_elided_text()
+
+    def _update_elided_text(self) -> None:
+        # if necessary, calculate margin from current style
+        width = max(0, self.contentsRect().width() - 30)
+        abbrev = self.fontMetrics().elidedText(
+            self._full_text, QtCore.Qt.TextElideMode.ElideRight, width)
+        if self.text() != abbrev:
+            self.setText(abbrev)
