@@ -1,1 +1,1 @@
-from .tool import BlueprintSketcherTool as BlueprintSketcherTool
+from .impl import BlueprintSketcherTool as BlueprintSketcherTool

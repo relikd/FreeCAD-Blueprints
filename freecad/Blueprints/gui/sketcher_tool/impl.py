@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from ..qt import QtWidgets, Icon, ElidedButton, OpenFileLocationAction
-from .modifier import SketcherTool
+from .base import SketcherTool
 
 from typing import TYPE_CHECKING
 
