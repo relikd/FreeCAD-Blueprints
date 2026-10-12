@@ -99,9 +99,10 @@ class BlueprintInserter:
         self.close(postponeCursorCleanup=True)
 
     def did_click(self, sel: UserSelection) -> None:
-        # TODO: add GUI checkbox for allowRotate
         # TODO: checkbox for same-name = equals-constraint?
-        duplicator = BlueprintDuplicator(sel.vec, sel.geo, allowRotate=False)
+        options = self.sketcher_tool.get_state()
+        duplicator = BlueprintDuplicator(
+            sel.vec, sel.geo, allowRotate=options.rotation)
         thisDoc = self.current.Document
         thisDoc.openTransaction('Insert Blueprint (Sketch)')
         try:

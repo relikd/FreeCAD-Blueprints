@@ -17,28 +17,17 @@ else:
 
 
 class Icon:
-    # @staticmethod
-    # def folder() -> QtGui.QIcon:
-    #     ''' Shown in file browser. Regular folder / directory icon. '''
-    #     return QtWidgets.QApplication.style().standardIcon(
-    #         QtWidgets.QStyle.StandardPixmap.SP_DirIcon)
-
-    # @staticmethod
-    # def freecad_file() -> QtGui.QPixmap:
-    #     ''' Shown in file browser. FreeCAD app icon for `.FCStd` files. '''
-    #     return QtGui.QPixmap(RES_ROOT / 'icons' / 'freecad-document.svg')
-
     @staticmethod
-    def blueprint_toolbar() -> QtGui.QPixmap:
-        ''' Shown in Sketcher tool extension box. '''
-        return QtGui.QPixmap(RES_ROOT / 'icons' / 'toolbar.svg')
+    def with_name(name: str) -> QtGui.QPixmap:
+        ''' Load icon and set device pixel ration 2. '''
+        rv = QtGui.QPixmap(RES_ROOT / 'icons' / name)
+        rv.setDevicePixelRatio(2)
+        return rv
 
     @staticmethod
     def blueprint_cursor() -> QtGui.QCursor:
         ''' Mouse cursor shown while inserting blueprint. '''
-        svg = QtGui.QPixmap(RES_ROOT / 'icons' / 'cursor.svg')
-        svg.setDevicePixelRatio(2)
-        return QtGui.QCursor(svg, 8, 8)
+        return QtGui.QCursor(Icon.with_name('cursor.svg'), 8, 8)
 
 
 class OpenFileLocationAction(QtGui.QAction):

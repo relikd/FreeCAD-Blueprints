@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 from ..qt import QtWidgets, Icon, ElidedButton, OpenFileLocationAction
@@ -9,9 +10,14 @@ if TYPE_CHECKING:
     from ...blueprint_inserter import BlueprintInserter
 
 
+@dataclass
+class State:
+    rotation: bool
+
+
 class BlueprintSketcherTool(SketcherTool):
     TITLE = 'Blueprint Parameters'
-    ICON = Icon.blueprint_toolbar()
+    ICON = Icon.with_name('toolbar.svg')
 
     def __init__(self, inserter: 'BlueprintInserter') -> None:
         super().__init__()
@@ -31,13 +37,17 @@ class BlueprintSketcherTool(SketcherTool):
         fileinfo.addWidget(file_combo, 1)  # use full width
 
         # insert options
-        # rotation = QtWidgets.QCheckBox('Allow rotation')
-        # rotation.setToolTip('Remove Axes Alignment')
-        # rotation.setIcon(Icon.blueprint_toolbar())
+        rotation = QtWidgets.QCheckBox('Allow rotation')
+        rotation.setToolTip('Remove Axes Alignment')
+        rotation.setIcon(Icon.with_name('tool-allow-rotate.svg'))
+        self.rotation = rotation
 
         layout = QtWidgets.QVBoxLayout(self)
-        # layout.addWidget(rotation)
+        layout.addWidget(rotation)
         layout.addLayout(fileinfo)
+
+    def get_state(self) -> State:
+        return State(rotation=self.rotation.isChecked())
 
     def on_edit_sketch(self) -> None:
         self.inserter.close(reopenInEditMode=True)
