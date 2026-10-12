@@ -3,7 +3,7 @@ Code related to inserting another widget into Sketcher tools (docked panel).
 '''
 import FreeCADGui
 
-from ..qt import QtGui, QtWidgets
+from ..qt import QtCore, QtGui, QtWidgets
 
 
 class QtElementNotFound(Exception):
@@ -11,27 +11,16 @@ class QtElementNotFound(Exception):
 
 
 class SketcherTool(QtWidgets.QWidget):
-    ''' Base class template for managing single tool instances. '''
+    '''Base class for sketcher tools. Auto-adds the tool to the sketcher UI.'''
     TITLE: str
     ICON: 'QtGui.QIcon|QtGui.QPixmap'
 
     def __init__(self):
-        super().__init__()
-        SketcherToolModifier.install(self)
-
-    def cleanup(self, *, close: bool) -> None:
-        ''' Use `close` to control if the tool box should keep open or not. '''
-        SketcherToolModifier.uninstall(close=close)
-
-
-class SketcherToolModifier:
-    ''' Generic tool class manager. Inserts a `SketcherTool` into the UI. '''
-    @staticmethod
-    def install(tool: SketcherTool) -> None:
         '''
         Raises:
         QtElementNotFound: If `TaskSketcherTool` widget cannot be located.
         '''
+        super().__init__()
         container = task_tool_container()
         if not container:
             raise QtElementNotFound('TaskSketcherTool container not found.')
@@ -44,34 +33,47 @@ class SketcherToolModifier:
         if not body:
             raise QtElementNotFound('TaskSketcherTool body not found.')
 
-        _remove_previous(body, hide_others=True)
+        # hide whatever is currently visible
+        for child in body.children():
+            if isinstance(child, QtWidgets.QWidget):
+                child.setHidden(True)
         container.setHidden(False)
-        head.setIcon(tool.ICON)
-        head.setText(tool.TITLE)
-        body.layout().addWidget(tool)
-        tool.setProperty('_blueprint_tool', True)
+        head.setIcon(self.ICON)
+        head.setText(self.TITLE)
+        body.layout().addWidget(self)
+        # Widgets are added hidden by default. The SketcherTool -> SketcherTool
+        # transition triggers `cleanup` with a one cycle delay (`singleShot`).
+        # At this point, the newly added view is still hidden and thus cleanup
+        # would hide the parent container. So lets set hidden immediately.
+        self.setHidden(False)
 
-    @staticmethod
-    def uninstall(*, close: bool) -> None:
-        ''' Remove current tool from sketcher tools box. '''
+    def stop(self) -> None:
+        '''Remove this tool from sketcher tools box (+ auto-hide container).'''
+        # Additionally to the comment above, add a delay (100) and wait for
+        # other UI changes. Technically, 0 is fine for SketcherTool -> built-in
+        # geometry tool transitions. 100 is fine for ST -> ST transitions, even
+        # without the `setHidden(False)`. But lets be safe and do both.
+        QtCore.QTimer.singleShot(100, self._internal_cleanup)
+
+    def _internal_cleanup(self) -> None:
+        ''' Hides container if all children are hidden. '''
         if container := task_tool_container():
-            if close:
-                container.setHidden(True)
+            all_hidden = True
             if body := get_body(container):
-                _remove_previous(body, hide_others=False)
+                for child in body.children():
+                    if child == self:
+                        body.layout().removeWidget(self)
+                        self.setParent(None)
+                        self.deleteLater()
 
-
-def _remove_previous(body: QtWidgets.QFrame, *, hide_others: bool) -> None:
-    layout = body.layout()
-    for child in body.children():
-        if not isinstance(child, QtWidgets.QWidget):
-            continue
-        if child.property('_blueprint_tool'):
-            layout.removeWidget(child)
-            child.setParent(None)
-            child.deleteLater()
-        elif hide_others:
-            child.setHidden(True)
+                    elif isinstance(child, QtWidgets.QWidget) \
+                            and not child.isHidden():
+                        # either built-in geometry tool or our own SketcherTool
+                        # (a new instance overwriting the old)
+                        all_hidden = False
+                        break
+            if all_hidden:
+                container.setHidden(True)
 
 
 #################################################

@@ -69,7 +69,7 @@ class BlueprintInserter:
         self.action_monitor.stop()
         self.esc_monitor.stop()
         self.doc_monitor.stop()
-        self.sketcher_tool.cleanup(close=not postponeCursorCleanup)
+        self.sketcher_tool.stop()
         del self.cursor_monitor
         del self.click_monitor
         del self.action_monitor
