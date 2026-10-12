@@ -41,9 +41,9 @@ If the file contains multiple sketches, a popup will ask you which sketch to loa
 	- [ ] proper dev documentation (this Readme++)
 - [x] Improve blueprint insert workflow
 	- [x] cursor icon for blueprint placement
-	- [ ] where to show "allow rotation" option/checkbox?
+	- [x] where to show "allow rotation" option/checkbox?
 	- [ ] check if there are other expressions than in-sketch refs
-	- [ ] thumbnail preview of the sketch prior to import
+	- [x] thumbnail preview of the sketch prior to import
 	- [ ] multi-copy equals constraint (change all copies with a single value)
 - [ ] Allow user to (easily) create new blueprints
 	- [ ] shortcut to create new document in user-collection
