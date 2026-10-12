@@ -53,13 +53,11 @@ class BlueprintDuplicator:
         # override original axis (if necessary) to allow translation
         axis = _createArtificialAxis(dst, self.placement, _axisUsage(src))
 
-        # after (potential) artificial axis
-        # used to fix references when importing from other sketch
-        geoid_offset, cid_offset = dst.GeometryCount, dst.ConstraintCount
-
+        # after (potential) artificial axis but before copying geometry!
+        shifter = IdShifter(dst, axis)
         _copy_geometry(src, dst, self.placement)
-        name_map = _copy_constraints(src, dst, geoid_offset, axis)
-        _copy_expressions(src, dst, cid_offset, name_map)
+        _copy_constraints(src, dst, shifter)
+        _copy_expressions(src, dst, shifter)
 
         if self.allowRotate:
             dst.removeAxesAlignment(
@@ -73,7 +71,7 @@ class BlueprintDuplicator:
 
 
 #################################################
-# Helper methods
+# Axis detection
 #################################################
 
 class ReferencedAxis(NamedTuple):
@@ -102,6 +100,10 @@ def _axisUsage(sketch: 'Sketch') -> ReferencedAxis:
             return ReferencedAxis(True, True, True)  # break early
     return ReferencedAxis(v, h, origin)
 
+
+#################################################
+# Artificial axis creation
+#################################################
 
 class ArtificialAxis(NamedTuple):
     v: int
@@ -152,6 +154,71 @@ def _createArtificialAxis(
     return ArtificialAxis(v, h, origin=h if axis.h else v)
 
 
+#################################################
+# Offset indices for geometry and constraints
+#################################################
+
+@dataclass
+class IdShifter:
+    '''
+    - Offset all geo-ids for newly added constraints.
+    - Replace original axis with artificial axis (if any).
+    - Rename named constraints to avoid duplicates.
+    - Reindex all referenced ids in expressions.
+    '''
+    geoid_start: int
+    cid_start: int
+    name_map: dict[str, str]  # renamed constraints: `{old-name: new-name}`
+
+    def __init__(self, target: 'Sketch', axis: ArtificialAxis | None) -> None:
+        self.geoid_start = target.GeometryCount
+        self.cid_start = target.ConstraintCount
+        self._existing_names = {x.Name for x in target.Constraints} - {''}
+        self.name_map = {}
+
+        if axis:
+            def fn(geoid: int, _pos: int) -> int:
+                if geoid >= 0:  # normal geometry
+                    return self.geoid_start + geoid
+                if geoid == GeoId.HAxis:
+                    return axis.origin if _pos == PointPos.start else axis.h
+                if geoid == GeoId.VAxis:
+                    return axis.v
+                return geoid
+        else:  # use original axis
+            def fn(geoid: int, _pos: int) -> int:
+                if geoid >= 0:  # normal geometry
+                    return self.geoid_start + geoid
+                return geoid
+        self.shift_index = fn
+
+    def shift_name(self, name: str) -> str:
+        ''' Map "name" to "name_2", etc. Does nothing if `name` empty. '''
+        if name in self._existing_names:
+            for suffix in range(2, 999):
+                new_name = f'{name}_{suffix}'
+                if new_name not in self._existing_names:
+                    self.name_map[name] = new_name
+                    self._existing_names.add(new_name)
+                    return new_name
+        return name
+
+    def reindex(self, exp: str) -> str:
+        ''' Shift indices for indexed- and named- constraints. '''
+        exp = rx_expr_indexed.sub(lambda x:
+            f'Constraints[{self.cid_start + int(x.group(1))}]', exp)
+        return rx_expr_named.sub(lambda x:
+            '.Constraints.' + self.name_map.get(x.group(1), x.group(1)), exp)
+
+
+rx_expr_indexed = re.compile(r'Constraints\[([0-9]+)\]')
+rx_expr_named = re.compile(r'\.Constraints\.([a-zA-Z_]\w*)')
+
+
+#################################################
+# Duplicator methods
+#################################################
+
 def _copy_geometry(src: 'Sketch', dst: 'Sketch', toPos: 'Vector|None') -> None:
     ''' Duplicate geometry. Translate geometry by `toPos` vector. '''
     if toPos:
@@ -160,87 +227,33 @@ def _copy_geometry(src: 'Sketch', dst: 'Sketch', toPos: 'Vector|None') -> None:
         dst.addGeometry(src.Geometry)  # else, copy whole list verbatim
 
 
-def _copy_constraints(
-    src: 'Sketch', dst: 'Sketch', geoid_start: int,
-    axis: 'ArtificialAxis|None',
-) -> dict[str, str]:
-    '''
-    Duplicate constraints. Offset geo-ids by `geoid_start`.
-    Replace original axes with `h_axis` and `v_axis` respectively.
-    (use `h_axis=GeoId.HAxis, v_axis=GeoId.VAxis` if no artificial axes exist)
-
-    Returns mapping for renamed constraints: `{old-name: new-name}`.
-    '''
-    if axis:
-        def shift_index(geoid: int, _pos: int) -> int:
-            if geoid >= 0:  # normal geometry
-                return geoid_start + geoid
-            if geoid == GeoId.HAxis:
-                return axis.origin if _pos == PointPos.start else axis.h
-            if geoid == GeoId.VAxis:
-                return axis.v
-            return geoid
-    else:  # use original axis
-        def shift_index(geoid: int, _pos: int) -> int:
-            if geoid >= 0:  # normal geometry
-                return geoid_start + geoid
-            return geoid
-
-    rv = {}
-    existing_names = {x.Name for x in dst.Constraints} - {''}
-
-    def shift_name(name: str) -> str:
-        for suffix in range(2, 999):
-            new_name = f'{name}_{suffix}'
-            if new_name not in existing_names:
-                rv[name] = new_name
-                existing_names.add(new_name)
-                return new_name
-        return name
-
+def _copy_constraints(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
+    ''' Duplicate constraints. Indices shifted according to `IdShifter`. '''
     con_list = []
     for con in src.Constraints:
-        con.First = shift_index(con.First, con.FirstPos)
+        con.First = shiftr.shift_index(con.First, con.FirstPos)
         if con.Second != GeoId.Undef:
-            con.Second = shift_index(con.Second, con.SecondPos)
+            con.Second = shiftr.shift_index(con.Second, con.SecondPos)
         if con.Third != GeoId.Undef:
-            con.Third = shift_index(con.Third, con.ThirdPos)
-        if con.Name in existing_names:
-            con.Name = shift_name(con.Name)
+            con.Third = shiftr.shift_index(con.Third, con.ThirdPos)
+        con.Name = shiftr.shift_name(con.Name)
         con_list.append(con)
     dst.addConstraint(con_list)
     # dst.solve()  # no need, done at the end
-    return rv
 
 
-def _copy_expressions(
-    src: 'Sketch', dst: 'Sketch', cid_start: int, name_map: dict[str, str],
-) -> None:
-    ''' Duplicate expressions. Offset constraint indices by `cid_start`. '''
+def _copy_expressions(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
+    ''' Duplicate expressions. Indices shifted according to `IdShifter`. '''
     for field, val in src.ExpressionEngine:
         if field.startswith(('Constraints[', '.Constraints.')):
-            dst.setExpression(
-                _re_index_expr(field, cid_start, name_map),
-                _re_index_expr(val, cid_start, name_map))
+            dst.setExpression(shiftr.reindex(field), shiftr.reindex(val))
         else:
             Notify.Log.err(f'Unhandled expr variant: "{field}". '
                            'Please report this error on GitHub.')
 
 
 def _constrain_origin(dst: 'Sketch', origin: GeoRef, toTarget: GeoRef) -> None:
-    if toTarget.pos == 0:
+    if toTarget.pos == PointPos.none:
         dst.addConstraint(Constr.PointOnObject(origin, toTarget.geoid))
     else:
         dst.addConstraint(Constr.Coincident(toTarget, origin))
-
-
-rx_expr_indexed = re.compile(r'Constraints\[([0-9]+)\]')
-rx_expr_named = re.compile(r'\.Constraints\.([a-zA-Z_]\w*)')
-
-
-def _re_index_expr(exp: str, start: int, name_map: dict[str, str]) -> str:
-    ''' Shift indices for indexed- and named- constraints. '''
-    exp = rx_expr_indexed.sub(lambda x:
-        f'Constraints[{start + int(x.group(1))}]', exp)
-    return rx_expr_named.sub(lambda x:
-        '.Constraints.' + name_map.get(x.group(1), x.group(1)), exp)
