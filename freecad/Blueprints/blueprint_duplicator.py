@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
     from FreeCAD import Vector
     from Part import Geometry
+    NamedEquals = dict[str, int]
 
 
 def _validate(sketch: 'Sketch') -> None:
@@ -36,10 +37,17 @@ class BlueprintDuplicator:
         After import, run `removeAxesAlignment` to allow blueprint rotation.
         This depends heavily on the quality of the source sketch.
         Please avoid `DistanceX` and `DistanceY` constraints.
+    namedEquals:
+        Dictionary with `{constraint-name: constraint-id}` mapping (or empty).
+        If provided, constraints with the same name will create an
+        equals-constraint instead of duplicating the source constraint.
+        Dictionary is populated with new entries during processing.
+        You can store and reuse the result after `copyTo`.
     '''
     placement: 'Vector|None'
     constrainTo: 'GeoRef|None'
-    allowRotate: bool = False
+    allowRotate: bool
+    namedEquals: 'NamedEquals'  # use empty dict to ignore
 
     def copyTo(self, dst: 'Sketch', *, src: 'Sketch') -> None:
         ''' Copy a sketch from one document to another. '''
@@ -54,7 +62,7 @@ class BlueprintDuplicator:
         axis = _createArtificialAxis(dst, self.placement, _axisUsage(src))
 
         # after (potential) artificial axis but before copying geometry!
-        shifter = IdShifter(dst, axis)
+        shifter = IdShifter(dst, axis, self.namedEquals)
         _copy_geometry(src, dst, self.placement)
         _copy_constraints(src, dst, shifter)
         _copy_expressions(src, dst, shifter)
@@ -158,6 +166,23 @@ def _createArtificialAxis(
 # Offset indices for geometry and constraints
 #################################################
 
+def _validate_equals(equals: 'NamedEquals', target: 'Sketch') -> 'NamedEquals':
+    '''Before processing, verify previous state still points to valid cids.'''
+    max_id = target.ConstraintCount
+    # We COULD remove only invalid cid's and keep a valid-only subset.
+    # But I am not sure what consequences that will have.
+    # Its safer to destroy the whole state, so user may notice it earlier.
+    for expected_name, cid in equals.items():
+        if cid >= max_id:
+            equals.clear()  # use `clear` to keep `prev_state` of caller active
+            break
+        actual = target.Constraints[cid].Name
+        if actual != expected_name and not actual.startswith(expected_name):
+            equals.clear()
+            break
+    return equals
+
+
 @dataclass
 class IdShifter:
     '''
@@ -170,11 +195,17 @@ class IdShifter:
     cid_start: int
     name_map: dict[str, str]  # renamed constraints: `{old-name: new-name}`
 
-    def __init__(self, target: 'Sketch', axis: ArtificialAxis | None) -> None:
+    def __init__(
+        self,
+        target: 'Sketch',
+        axis: ArtificialAxis | None,
+        equals: 'NamedEquals',
+    ) -> None:
         self.geoid_start = target.GeometryCount
         self.cid_start = target.ConstraintCount
         self._existing_names = {x.Name for x in target.Constraints} - {''}
         self.name_map = {}
+        self.named_equals = _validate_equals(equals, target)
 
         if axis:
             def fn(geoid: int, _pos: int) -> int:
@@ -203,6 +234,18 @@ class IdShifter:
                     return new_name
         return name
 
+    def can_equalize_name(self, index: int, name: str) -> 'int|None':
+        ''' Either gets previous constraint-id or stores cid for next use. '''
+        if name:
+            # Called regardless if `named_equals` is provided or not.
+            # But an empty input dict will never run into this return branch.
+            if (prev_cid := self.named_equals.get(name)) is not None:
+                return prev_cid  # subsequent copies
+            # `cid_start` offset is the magic here. The first copy stores the
+            # offset, while subsequent copies use the offset of the first copy.
+            self.named_equals[name] = self.cid_start + index  # first copy
+        return None
+
     def reindex(self, exp: str) -> str:
         ''' Shift indices for indexed- and named- constraints. '''
         exp = rx_expr_indexed.sub(lambda x:
@@ -230,8 +273,17 @@ def _copy_geometry(src: 'Sketch', dst: 'Sketch', toPos: 'Vector|None') -> None:
 def _copy_constraints(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
     ''' Duplicate constraints. Indices shifted according to `IdShifter`. '''
     con_list = []
-    for con in src.Constraints:
+    for i, con in enumerate(src.Constraints):
         con.First = shiftr.shift_index(con.First, con.FirstPos)
+
+        # if `namedEquals`, replace with equals constraint
+        if (prev_cid := shiftr.can_equalize_name(i, con.Name)) is not None:
+            prev_con = dst.Constraints[prev_cid]
+            shiftr.name_map[con.Name] = prev_con.Name  # name could be shifted
+            con_list.append(Constr.Equal(prev_con.First, con.First))
+            # TODO: copy con.Driving, con.InVirtualSpace, con.IsActive
+            continue
+
         if con.Second != GeoId.Undef:
             con.Second = shiftr.shift_index(con.Second, con.SecondPos)
         if con.Third != GeoId.Undef:

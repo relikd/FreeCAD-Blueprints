@@ -42,6 +42,7 @@ class BlueprintInserter:
 
         self.current = current
         self.blueprint = blueprint
+        self.prev_state = {}
 
         # indicate insertion mode by showing cursor icon
         self.cursor_monitor = MouseCursorListener(view)
@@ -99,10 +100,17 @@ class BlueprintInserter:
         self.close(postponeCursorCleanup=True)
 
     def did_click(self, sel: UserSelection) -> None:
-        # TODO: checkbox for same-name = equals-constraint?
         options = self.sketcher_tool.get_state()
         duplicator = BlueprintDuplicator(
-            sel.vec, sel.geo, allowRotate=options.rotation)
+            sel.vec, sel.geo,
+            allowRotate=options.rotation,
+            # `prev_state` is updated (and reused) only if the checkbox is set.
+            # Else, a new dict is created and discarded in the same run.
+            # If toggled multiple times during insert, `prev_state` will reuse
+            # the first copy instead of some in-between copy.
+            # Starting a new blueprint session, will also reset the first copy.
+            namedEquals=self.prev_state if options.equal_named else {},
+        )
         thisDoc = self.current.Document
         thisDoc.openTransaction('Insert Blueprint (Sketch)')
         try:

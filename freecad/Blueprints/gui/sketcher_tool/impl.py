@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 @dataclass
 class State:
     rotation: bool
+    equal_named: bool
 
 
 class BlueprintSketcherTool(SketcherTool):
@@ -42,12 +43,22 @@ class BlueprintSketcherTool(SketcherTool):
         rotation.setIcon(Icon.with_name('tool-allow-rotate.svg'))
         self.rotation = rotation
 
+        equal_named = QtWidgets.QCheckBox('Apply equal constraints')
+        equal_named.setToolTip(
+            'Create equal-constraints (named constraints only)')
+        equal_named.setIcon(Icon.with_name('tool-equal-named.svg'))
+        self.equal_named = equal_named
+
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(rotation)
+        layout.addWidget(equal_named)
         layout.addLayout(fileinfo)
 
     def get_state(self) -> State:
-        return State(rotation=self.rotation.isChecked())
+        return State(
+            rotation=self.rotation.isChecked(),
+            equal_named=self.equal_named.isChecked(),
+        )
 
     def on_edit_sketch(self) -> None:
         self.inserter.close(reopenInEditMode=True)
