@@ -281,7 +281,6 @@ def _copy_constraints(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
             prev_con = dst.Constraints[prev_cid]
             shiftr.name_map[con.Name] = prev_con.Name  # name could be shifted
             con_list.append(Constr.Equal(prev_con.First, con.First))
-            # TODO: copy con.Driving, con.InVirtualSpace, con.IsActive
             continue
 
         if con.Second != GeoId.Undef:
