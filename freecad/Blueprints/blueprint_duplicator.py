@@ -248,14 +248,19 @@ class IdShifter:
 
     def reindex(self, exp: str) -> str:
         ''' Shift indices for indexed- and named- constraints. '''
-        exp = rx_expr_indexed.sub(lambda x:
-            f'Constraints[{self.cid_start + int(x.group(1))}]', exp)
-        return rx_expr_named.sub(lambda x:
-            '.Constraints.' + self.name_map.get(x.group(1), x.group(1)), exp)
+        return rx_expr.sub(self._reindex_both, exp)
+
+    def _reindex_both(self, match: re.Match) -> str:
+        ''' input: `Constraints[<000>]` or `.Constraints.<Name>` '''
+        cid, name = match.groups()  # matches either, not both
+        if cid:  # a string, so even "0" is not False
+            return f'Constraints[{self.cid_start + int(cid)}]'
+        if name:
+            return '.Constraints.' + self.name_map.get(name, name)
+        return match.group(0)  # fallback to original string
 
 
-rx_expr_indexed = re.compile(r'Constraints\[([0-9]+)\]')
-rx_expr_named = re.compile(r'\.Constraints\.([a-zA-Z_]\w*)')
+rx_expr = re.compile(r'Constraints\[([0-9]+)\]|\.Constraints\.([a-zA-Z_]\w*)')
 
 
 #################################################
