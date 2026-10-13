@@ -1,7 +1,7 @@
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-<g fill="#e33" stroke="#300" stroke-width="2" transform="scale(.8)rotate(-20)translate(-5,12)">
-<path d="m10 47v-29h-5l8-12 8 12h-5v29z"/>
-<path d="m17 48h29v-5l12 8-12 8v-5h-29z"/>
+<g fill="#e33" stroke="#300" stroke-width="2" transform="scale(1.4)translate(-8,-14)rotate(-10)">
+<path d="m10 47v-13h-5l8-12 8 12h-5v13z"/>
+<path d="m17 48h13v-5l12 8-12 8v-5h-13z"/>
 <circle cx="13" cy="51" r="6"/>
 </g>
 </svg>
