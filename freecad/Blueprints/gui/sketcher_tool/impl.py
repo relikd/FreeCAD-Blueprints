@@ -26,7 +26,11 @@ class BlueprintSketcherTool(SketcherTool):
         path = Path(inserter.blueprint.Document.FileName)
 
         # blueprint source file info
-        file_combo = ElidedButton(f'{inserter.blueprint.Label} ({path.name})')
+        if inserter.blueprint.Name != inserter.blueprint.Label:
+            shortname = f'{inserter.blueprint.Label} ({path.name})'
+        else:
+            shortname = path.name
+        file_combo = ElidedButton(shortname)
         file_combo.setToolTip(str(path))
         file_combo_menu = QtWidgets.QMenu(file_combo)
         OpenFileLocationAction(path).addTo(file_combo_menu)
