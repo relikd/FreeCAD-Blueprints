@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 class State:
     rotation: bool
     equal_named: bool
+    hide_unnamed: bool
 
 
 class BlueprintSketcherTool(SketcherTool):
@@ -53,15 +54,21 @@ class BlueprintSketcherTool(SketcherTool):
         equal_named.setIcon(Icon.with_name('tool-equal-named.svg'))
         self.equal_named = equal_named
 
+        hide_unnamed = QtWidgets.QCheckBox('Hide unnamed constraints')
+        hide_unnamed.setToolTip('Only show named constraints in Sketcher')
+        self.hide_unnamed = hide_unnamed
+
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(rotation)
         layout.addWidget(equal_named)
+        layout.addWidget(hide_unnamed)
         layout.addLayout(fileinfo)
 
     def get_state(self) -> State:
         return State(
             rotation=self.rotation.isChecked(),
             equal_named=self.equal_named.isChecked(),
+            hide_unnamed=self.hide_unnamed.isChecked(),
         )
 
     def on_edit_sketch(self) -> None:

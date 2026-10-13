@@ -104,6 +104,7 @@ class BlueprintInserter:
         duplicator = BlueprintDuplicator(
             sel.vec, sel.geo,
             allowRotate=options.rotation,
+            hideUnnamed=options.hide_unnamed,
             # `prev_state` is updated (and reused) only if the checkbox is set.
             # Else, a new dict is created and discarded in the same run.
             # If toggled multiple times during insert, `prev_state` will reuse

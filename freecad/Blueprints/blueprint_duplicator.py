@@ -37,6 +37,8 @@ class BlueprintDuplicator:
         After import, run `removeAxesAlignment` to allow blueprint rotation.
         This depends heavily on the quality of the source sketch.
         Please avoid `DistanceX` and `DistanceY` constraints.
+    hideUnnamed:
+        If enabled, set virtual space for all constraints except named ones.
     namedEquals:
         Dictionary with `{constraint-name: constraint-id}` mapping (or empty).
         If provided, constraints with the same name will create an
@@ -47,6 +49,7 @@ class BlueprintDuplicator:
     placement: 'Vector|None'
     constrainTo: 'GeoRef|None'
     allowRotate: bool
+    hideUnnamed: bool
     namedEquals: 'NamedEquals'  # use empty dict to ignore
 
     def copyTo(self, dst: 'Sketch', *, src: 'Sketch') -> None:
@@ -64,7 +67,7 @@ class BlueprintDuplicator:
         # after (potential) artificial axis but before copying geometry!
         shifter = IdShifter(dst, axis, self.namedEquals)
         _copy_geometry(src, dst, self.placement)
-        _copy_constraints(src, dst, shifter)
+        _copy_constraints(src, dst, shifter, hideUnnamed=self.hideUnnamed)
         _copy_expressions(src, dst, shifter)
 
         if self.allowRotate:
@@ -275,9 +278,12 @@ def _copy_geometry(src: 'Sketch', dst: 'Sketch', toPos: 'Vector|None') -> None:
         dst.addGeometry(src.Geometry)  # else, copy whole list verbatim
 
 
-def _copy_constraints(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
+def _copy_constraints(
+    src: 'Sketch', dst: 'Sketch', shiftr: IdShifter, *, hideUnnamed: bool,
+) -> None:
     ''' Duplicate constraints. Indices shifted according to `IdShifter`. '''
     con_list = []
+    unnamed_constraints = []
     for i, con in enumerate(src.Constraints):
         con.First = shiftr.shift_index(con.First, con.FirstPos)
 
@@ -294,7 +300,12 @@ def _copy_constraints(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
             con.Third = shiftr.shift_index(con.Third, con.ThirdPos)
         con.Name = shiftr.shift_name(con.Name)
         con_list.append(con)
+
+        if not con.Name:
+            unnamed_constraints.append(shiftr.cid_start + i)
     dst.addConstraint(con_list)
+    if hideUnnamed:
+        dst.setVirtualSpace(unnamed_constraints, True)
     # dst.solve()  # no need, done at the end
 
 
