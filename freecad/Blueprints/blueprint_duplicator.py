@@ -66,13 +66,19 @@ class BlueprintDuplicator:
         # after (potential) artificial axis but before copying geometry!
         shifter = IdShifter(dst, axis, self.namedEquals)
         _copy_geometry(src, dst, self.placement)
-        _copy_constraints(src, dst, shifter, hideUnnamed=self.hideUnnamed)
+        _copy_constraints(src, dst, shifter)
         _copy_expressions(src, dst, shifter)
 
         if self.allowRotate:
             # this changes existing constraints, be careful with cid references
-            # `_constrain_origin` is unaffected but `prev_state` may invalidate
+            # `_constrain_origin` is unaffected by this.
             dst.removeAxesAlignment(list(range(geoid_0, dst.GeometryCount)))
+
+        if self.hideUnnamed:
+            # before `_constrain_origin` to keep that constraint visible
+            dst.setVirtualSpace([
+                i for i in range(cid_0, dst.ConstraintCount)
+                if not dst.Constraints[i].Name], True)
 
         # solve at the end should be sufficient as we dont manipulate geometry
         dst.solve()
@@ -280,12 +286,9 @@ def _copy_geometry(src: 'Sketch', dst: 'Sketch', toPos: 'Vector|None') -> None:
         dst.addGeometry(src.Geometry)  # else, copy whole list verbatim
 
 
-def _copy_constraints(
-    src: 'Sketch', dst: 'Sketch', shiftr: IdShifter, *, hideUnnamed: bool,
-) -> None:
+def _copy_constraints(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
     ''' Duplicate constraints. Indices shifted according to `IdShifter`. '''
     con_list = []
-    unnamed_constraints = []
     for i, con in enumerate(src.Constraints):
         con.First = shiftr.shift_index(con.First, con.FirstPos)
         if con.Second != GeoId.Undef:
@@ -295,12 +298,7 @@ def _copy_constraints(
         if con.Name:
             con.Name = shiftr.shift_name(i, con.Name)
         con_list.append(con)
-
-        if not con.Name:
-            unnamed_constraints.append(shiftr.cid_start + i)
     dst.addConstraint(con_list)
-    if hideUnnamed:
-        dst.setVirtualSpace(unnamed_constraints, True)
     # dst.solve()  # no need, done at the end
 
 
