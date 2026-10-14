@@ -196,6 +196,7 @@ class IdShifter:
     '''
     geoid_start: int
     cid_start: int
+    is_first_copy: bool  # whether or not a `prev_state` was provided
     name_map: dict[str, str]  # renamed constraints: `{old-name: new-name}`
 
     def __init__(
@@ -209,6 +210,7 @@ class IdShifter:
         self._existing_names = {x.Name for x in target.Constraints} - {''}
         self.name_map = {}
         self.named_equals = _validate_equals(equals, target)
+        self.is_first_copy = not self.named_equals  # after `_validate_equals`
 
         if axis:
             def fn(geoid: int, _pos: int) -> int:
@@ -240,13 +242,12 @@ class IdShifter:
     def can_equalize_name(self, index: int, name: str) -> 'int|None':
         ''' Either gets previous constraint-id or stores cid for next use. '''
         if name:
-            # Called regardless if `named_equals` is provided or not.
-            # But an empty input dict will never run into this return branch.
-            if (prev_cid := self.named_equals.get(name)) is not None:
-                return prev_cid  # subsequent copies
             # `cid_start` offset is the magic here. The first copy stores the
             # offset, while subsequent copies use the offset of the first copy.
-            self.named_equals[name] = self.cid_start + index  # first copy
+            if self.is_first_copy:
+                self.named_equals[name] = self.cid_start + index
+                return None
+            return self.named_equals.get(name)  # subsequent copies
         return None
 
     def reindex(self, exp: str) -> str:
