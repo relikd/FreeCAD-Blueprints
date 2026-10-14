@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
     from FreeCAD import Vector
     from Part import Geometry
-    NamedEquals = dict[str, int]
+    NamedEquals = dict[str, str]
 
 
 def _validate(sketch: 'Sketch') -> None:
@@ -40,11 +40,10 @@ class BlueprintDuplicator:
     hideUnnamed:
         If enabled, set virtual space for all constraints except named ones.
     namedEquals:
-        Dictionary with `{constraint-name: constraint-id}` mapping (or empty).
-        If provided, constraints with the same name will create an
-        equals-constraint instead of duplicating the source constraint.
-        Dictionary is populated with new entries during processing.
-        You can store and reuse the result after `copyTo`.
+        Dictionary with `{original-name: first-copy-name}` (or empty).
+        If provided, subsequent copies will create equals-constraints on the
+        first copy (named constraints only). Parameter is populated with new
+        entries during processing. Store and reuse the result after `copyTo`.
     '''
     placement: 'Vector|None'
     constrainTo: 'GeoRef|None'
@@ -74,13 +73,6 @@ class BlueprintDuplicator:
             # this changes existing constraints, be careful with cid references
             # `_constrain_origin` is unaffected but `prev_state` may invalidate
             dst.removeAxesAlignment(list(range(geoid_0, dst.GeometryCount)))
-
-            if shifter.is_first_copy:
-                inv_map = {v: k for k, v in shifter.name_map.items()}
-                # cid references have changed, fix `prev_state`
-                for i, con in enumerate(dst.Constraints[cid_0:], cid_0):
-                    if name := inv_map.pop(con.Name, con.Name):
-                        self.namedEquals[name] = i
 
         # solve at the end should be sufficient as we dont manipulate geometry
         dst.solve()
@@ -177,23 +169,6 @@ def _createArtificialAxis(
 # Offset indices for geometry and constraints
 #################################################
 
-def _validate_equals(equals: 'NamedEquals', target: 'Sketch') -> 'NamedEquals':
-    '''Before processing, verify previous state still points to valid cids.'''
-    max_id = target.ConstraintCount
-    # We COULD remove only invalid cid's and keep a valid-only subset.
-    # But I am not sure what consequences that will have.
-    # Its safer to destroy the whole state, so user may notice it earlier.
-    for expected_name, cid in equals.items():
-        if cid >= max_id:
-            equals.clear()  # use `clear` to keep `prev_state` of caller active
-            break
-        actual = target.Constraints[cid].Name
-        if actual != expected_name and not actual.startswith(expected_name):
-            equals.clear()
-            break
-    return equals
-
-
 @dataclass
 class IdShifter:
     '''
@@ -205,7 +180,8 @@ class IdShifter:
     geoid_start: int
     cid_start: int
     is_first_copy: bool  # whether or not a `prev_state` was provided
-    name_map: dict[str, str]  # renamed constraints: `{old-name: new-name}`
+    name_to_name: dict[str, str]  # `{original-name: new-name}`
+    name_to_id: dict[str, int]  # `{original-name: absolute constraint-id}`
 
     def __init__(
         self,
@@ -216,9 +192,16 @@ class IdShifter:
         self.geoid_start = target.GeometryCount
         self.cid_start = target.ConstraintCount
         self._existing_names = {x.Name for x in target.Constraints} - {''}
-        self.name_map = {}
-        self.named_equals = _validate_equals(equals, target)
-        self.is_first_copy = not self.named_equals  # after `_validate_equals`
+        self.name_to_name = {}
+        self.name_to_id = {}
+
+        # validate if (potetially shifted) names still exist.
+        if set(equals.values()) - {con.Name for con in target.Constraints}:
+            # We COULD keep valid refs but it's safer to destroy whole state
+            equals.clear()  # use `clear` to update `prev_state` of caller
+
+        self.named_equals = equals
+        self.is_first_copy = not equals
 
         if axis:
             def fn(geoid: int, _pos: int) -> int:
@@ -236,27 +219,32 @@ class IdShifter:
                 return geoid
         self.shift_index = fn
 
-    def shift_name(self, name: str) -> str:
+    def _next_name(self, name: str) -> str:
         ''' Map "name" to "name_2", etc. Does nothing if `name` empty. '''
         if name in self._existing_names:
             for suffix in range(2, 999):
                 new_name = f'{name}_{suffix}'
                 if new_name not in self._existing_names:
-                    self.name_map[name] = new_name
+                    self.name_to_name[name] = new_name
                     self._existing_names.add(new_name)
                     return new_name
         return name
 
-    def can_equalize_name(self, index: int, name: str) -> 'int|None':
-        ''' Either gets previous constraint-id or stores cid for next use. '''
+    def shift_name(self, index: int, name: str) -> str:
+        ''' Auto-increment constraint name and update `prev_state`. '''
         if name:
-            # `cid_start` offset is the magic here. The first copy stores the
-            # offset, while subsequent copies use the offset of the first copy.
             if self.is_first_copy:
-                self.named_equals[name] = self.cid_start + index
-                return None
-            return self.named_equals.get(name)  # subsequent copies
-        return None
+                new_name = self._next_name(name)
+                self.named_equals[name] = new_name
+                return new_name
+            # subsequent copies:
+            if prev_name := self.named_equals.get(name):
+                self.name_to_name[name] = prev_name
+                self.name_to_id[name] = self.cid_start + index
+                # Named equals are replaced with indexed constraints.
+                # A new calculated "equals" expression is created afterwards.
+                return ''
+        return name
 
     def reindex(self, exp: str) -> str:
         ''' Shift indices for indexed- and named- constraints. '''
@@ -268,7 +256,12 @@ class IdShifter:
         if cid:  # a string, so even "0" is not False
             return f'Constraints[{self.cid_start + int(cid)}]'
         if name:
-            return '.Constraints.' + self.name_map.get(name, name)
+            # all subsequent copies are indexed
+            if (indexed := self.name_to_id.get(name)) is not None:
+                return f'Constraints[{indexed}]'
+            # first copy is only renamed
+            if new_name := self.name_to_name.get(name):
+                return '.Constraints.' + new_name
         return match.group(0)  # fallback to original string
 
 
@@ -295,19 +288,12 @@ def _copy_constraints(
     unnamed_constraints = []
     for i, con in enumerate(src.Constraints):
         con.First = shiftr.shift_index(con.First, con.FirstPos)
-
-        # if `namedEquals`, replace with equals constraint
-        if (prev_cid := shiftr.can_equalize_name(i, con.Name)) is not None:
-            prev_con = dst.Constraints[prev_cid]
-            shiftr.name_map[con.Name] = prev_con.Name  # name could be shifted
-            con_list.append(Constr.Equal(prev_con.First, con.First))
-            continue
-
         if con.Second != GeoId.Undef:
             con.Second = shiftr.shift_index(con.Second, con.SecondPos)
         if con.Third != GeoId.Undef:
             con.Third = shiftr.shift_index(con.Third, con.ThirdPos)
-        con.Name = shiftr.shift_name(con.Name)
+        if con.Name:
+            con.Name = shiftr.shift_name(i, con.Name)
         con_list.append(con)
 
         if not con.Name:
@@ -326,6 +312,12 @@ def _copy_expressions(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
         else:
             Notify.Log.err(f'Unhandled expr variant: "{field}". '
                            'Please report this error on GitHub.')
+
+    # create (or overwrite) expression for all named expressions
+    # set "equals" expression on first-copy constraint (by name)
+    for name, idx in shiftr.name_to_id.items():
+        dst.setExpression(f'Constraints[{idx}]',  # newly created after reindex
+                          '.Constraints.' + shiftr.name_to_name[name])
 
 
 def _constrain_origin(dst: 'Sketch', origin: GeoRef, toTarget: GeoRef) -> None:
