@@ -7,6 +7,7 @@ import FreeCADGui
 from .events.action_listener import ActionListener
 from .events.doc_observer import DocObserver
 from .events.esc_listener import EscListener
+from .events.hotkey_listener import HotkeyListener
 from .events.mouse_click_listener import MouseClickListener, UserSelection
 from .events.mouse_cursor_listener import MouseCursorListener
 from .gui.sketcher_tool import BlueprintSketcherTool
@@ -56,6 +57,8 @@ class BlueprintInserter:
         self.doc_monitor = DocObserver(onEditEnd=self.on_end_editing)
         # add option buttons to sketcher task panel
         self.sketcher_tool = BlueprintSketcherTool(self)
+        # allow user to toggle sketcher tool options with single-key hotkeys
+        self.hotkeyd = HotkeyListener(view, self.sketcher_tool.on_hotkey)
 
     def close(
         self,
@@ -70,12 +73,14 @@ class BlueprintInserter:
         self.action_monitor.stop()
         self.esc_monitor.stop()
         self.doc_monitor.stop()
+        self.hotkeyd.stop()
         self.sketcher_tool.stop()
         del self.cursor_monitor
         del self.click_monitor
         del self.action_monitor
         del self.esc_monitor
         del self.doc_monitor
+        del self.hotkeyd
         del self.sketcher_tool
         if reopenInEditMode:
             new_sketch = reloadSketch(self.blueprint, hidden=False)

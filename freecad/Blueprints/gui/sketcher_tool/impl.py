@@ -43,12 +43,12 @@ class BlueprintSketcherTool(SketcherTool):
         fileinfo.addWidget(file_combo, 1)  # use full width
 
         # insert options
-        rotation = QtWidgets.QCheckBox('Allow rotation')
+        rotation = QtWidgets.QCheckBox('Allow rotation (M)')
         rotation.setToolTip('Remove Axes Alignment')
         rotation.setIcon(Icon.with_name('tool-allow-rotate.svg'))
         self.rotation = rotation
 
-        equal_named = QtWidgets.QCheckBox('Apply equal constraints')
+        equal_named = QtWidgets.QCheckBox('Apply equal constraints (J)')
         equal_named.setToolTip(
             'Create equal-constraints (named constraints only)')
         equal_named.setIcon(Icon.with_name('tool-equal-named.svg'))
@@ -63,6 +63,15 @@ class BlueprintSketcherTool(SketcherTool):
         layout.addWidget(equal_named)
         layout.addWidget(hide_unnamed)
         layout.addLayout(fileinfo)
+
+    def on_hotkey(self, letter: str) -> bool:
+        if letter == 'M':
+            self.rotation.toggle()
+        elif letter == 'J':
+            self.equal_named.toggle()
+        else:
+            return False
+        return True
 
     def get_state(self) -> State:
         return State(
