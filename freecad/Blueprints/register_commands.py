@@ -47,8 +47,8 @@ class Blueprints_Add_Cmd:
                        'Open a sketch in edit mode, then try again.')
             return
 
-        if blueprint := chooseBlueprint():
-            BlueprintInserter.cancel_previous(keepOpen=blueprint)
+        if blueprint := chooseBlueprint(BlueprintInserter.current_doc()):
+            BlueprintInserter.kill_previous(ignored=blueprint.Document)
             # cancel any current geometry or constraint tool
             FreeCADGui.runCommand('Sketcher_StopOperation', 0)
             BlueprintInserter(currentSketch, blueprint)

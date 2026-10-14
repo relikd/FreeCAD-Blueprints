@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
+    from FreeCAD import Document
 
 
 _SESSIONS: list['BlueprintInserter'] = []
@@ -25,11 +26,15 @@ _SESSIONS: list['BlueprintInserter'] = []
 
 class BlueprintInserter:
     @staticmethod
-    def cancel_previous(*, keepOpen: 'Sketch') -> None:
-        ''' Cancel any previous insert session. '''
+    def current_doc() -> 'Document|None':
+        ''' Get document of current session. Never close current document! '''
+        return _SESSIONS[0].blueprint.Document if _SESSIONS else None
+
+    @staticmethod
+    def kill_previous(*, ignored: 'Document') -> None:
+        ''' Kill previous session(s) but keep `ignored` document open. '''
         for prev in _SESSIONS:
-            same_doc = prev.blueprint.Document.Name == keepOpen.Document.Name
-            prev.close(keepOpen=same_doc)
+            prev.close(keepOpen=prev.blueprint.Document == ignored)
 
     def __init__(self, current: 'Sketch', blueprint: 'Sketch') -> None:
         doc = FreeCADGui.ActiveDocument

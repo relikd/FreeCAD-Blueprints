@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from FreeCAD import Document
 
 
-def chooseBlueprint() -> 'Sketch|None':
+def chooseBlueprint(prev_doc: 'Document|None') -> 'Sketch|None':
     '''
     Open file browser to let user choose which Sketch to load.
 
@@ -22,11 +22,11 @@ def chooseBlueprint() -> 'Sketch|None':
     e.g., `FreeCAD.closeDocument(sketch.Document.Name)`
     '''
     if path := open_blueprint_browser():
-        return _loadSketchAtPath(str(path))
+        return _loadSketchAtPath(str(path), prev_doc)
     return None
 
 
-def _loadSketchAtPath(path: str) -> 'Sketch|None':
+def _loadSketchAtPath(path: str, prev_doc: 'Document|None') -> 'Sketch|None':
     '''
     Same as `_loadSketchFromDoc()` but opens Document first.
 
@@ -45,7 +45,8 @@ def _loadSketchAtPath(path: str) -> 'Sketch|None':
     if sk := _loadSketchFromDoc(doc):
         return sk
     # if no sketch found, close doc immediatelly
-    FreeCAD.closeDocument(doc.Name)
+    if prev_doc != doc:  # never close doc of current session -> error
+        FreeCAD.closeDocument(doc.Name)
     return None
 
 
