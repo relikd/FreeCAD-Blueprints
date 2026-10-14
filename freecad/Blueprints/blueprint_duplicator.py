@@ -69,9 +69,18 @@ class BlueprintDuplicator:
         _copy_constraints(src, dst, shifter)
         _copy_expressions(src, dst, shifter)
 
+        # TODO: don't hide equal-names constraints
+        # - If `allowRotate`, then `hideUnnamed`:
+        #   all cid's in `name_to_id` will be invalid.
+        # - If `hideUnnamed`, then `allowRotate`:
+        #   the latter will create new constraints, which are not hidden.
+        # - There is no reliable way to get a cid before-after mapping.
+        #   Constraint names can't be edited after committing `addConstraint`.
+        #   And we really don't want to create unnecessary names.
+
         if self.allowRotate:
             # this changes existing constraints, be careful with cid references
-            # `_constrain_origin` is unaffected by this.
+            # `_constrain_origin` is unaffected but `name_to_id` may invalidate
             dst.removeAxesAlignment(list(range(geoid_0, dst.GeometryCount)))
 
         if self.hideUnnamed:
