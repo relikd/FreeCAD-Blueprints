@@ -114,16 +114,16 @@ class BlueprintInserter:
 
     def did_click(self, sel: UserSelection) -> None:
         options = self.sketcher_tool.get_state()
+        if not options.equal_named:
+            # If we dont want `namedEquals`, clear the state before each run.
+            # `prev_state` will always keep the values of the first-copy run.
+            # Toggling multiple times, will reference the most-recent copy.
+            self.prev_state.clear()
         duplicator = BlueprintDuplicator(
             sel.vec, sel.geo,
             allowRotate=options.rotation,
             hideUnnamed=options.hide_unnamed,
-            # `prev_state` is updated (and reused) only if the checkbox is set.
-            # Else, a new dict is created and discarded in the same run.
-            # If toggled multiple times during insert, `prev_state` will reuse
-            # the first copy instead of some in-between copy.
-            # Starting a new blueprint session, will also reset the first copy.
-            namedEquals=self.prev_state if options.equal_named else {},
+            namedEquals=self.prev_state,
         )
         thisDoc = self.current.Document
         thisDoc.openTransaction('Insert Blueprint (Sketch)')
