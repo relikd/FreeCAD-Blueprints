@@ -39,6 +39,14 @@ class BlueprintInserter:
         if not view:
             raise RuntimeError('No active view')
 
+        # Required for `.DoF` access in `sketcher_tool` later.
+        # Not necessary for `.FullyConstrained` (if performance need arises).
+        # ... but also nice to enforce properly defined blueprints.
+        if (err := blueprint.solve()) != 0:
+            raise RuntimeError(
+                f'Sketch solver error: {err}. '
+                'This is an issue with the blueprint template file.')
+
         _SESSIONS.append(self)
 
         self.current = current

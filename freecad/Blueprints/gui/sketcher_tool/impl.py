@@ -24,11 +24,12 @@ class BlueprintSketcherTool(SketcherTool):
     def __init__(self, inserter: 'BlueprintInserter') -> None:
         super().__init__()
         self.inserter = inserter
-        path = Path(inserter.blueprint.Document.FileName)
+        sketch = inserter.blueprint
+        path = Path(sketch.Document.FileName)
 
         # blueprint source file info
-        if inserter.blueprint.Name != inserter.blueprint.Label:
-            shortname = f'{inserter.blueprint.Label} ({path.name})'
+        if sketch.Name != sketch.Label:
+            shortname = f'{sketch.Label} ({path.name})'
         else:
             shortname = path.name
         file_combo = ElidedButton(shortname)
@@ -39,7 +40,7 @@ class BlueprintSketcherTool(SketcherTool):
         file_combo.setMenu(file_combo_menu)
 
         fileinfo = QtWidgets.QHBoxLayout()
-        fileinfo.addWidget(QtWidgets.QLabel('Source:'))
+        fileinfo.addWidget(QtWidgets.QLabel(f'Source ({sketch.DoF} DoF):'))
         fileinfo.addWidget(file_combo, 1)  # use full width
 
         # insert options
