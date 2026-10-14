@@ -58,7 +58,7 @@ class BlueprintDuplicator:
 
         # where newly created geo ids start
         # used to group everything which was created by this process
-        initial_geoid = dst.GeometryCount
+        geoid_0, cid_0 = dst.GeometryCount, dst.ConstraintCount
 
         # check if sketch contains references on any of the axes
         # override original axis (if necessary) to allow translation
@@ -71,8 +71,16 @@ class BlueprintDuplicator:
         _copy_expressions(src, dst, shifter)
 
         if self.allowRotate:
-            dst.removeAxesAlignment(
-                list(range(initial_geoid, dst.GeometryCount)))
+            # this changes existing constraints, be careful with cid references
+            # `_constrain_origin` is unaffected but `prev_state` may invalidate
+            dst.removeAxesAlignment(list(range(geoid_0, dst.GeometryCount)))
+
+            if shifter.is_first_copy:
+                inv_map = {v: k for k, v in shifter.name_map.items()}
+                # cid references have changed, fix `prev_state`
+                for i, con in enumerate(dst.Constraints[cid_0:], cid_0):
+                    if name := inv_map.pop(con.Name, con.Name):
+                        self.namedEquals[name] = i
 
         # solve at the end should be sufficient as we dont manipulate geometry
         dst.solve()
