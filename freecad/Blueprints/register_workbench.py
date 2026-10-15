@@ -24,10 +24,9 @@ class PseudoWorkbench:
 
     def modifyMenuBar(self) -> list[dict[str, str]]:
         if isSketcher():
-            from .register_commands import CMD_NAME  # noqa: PLC0415
+            from .register_commands import MENU_NAME  # noqa: PLC0415
             return [
-                {'menuItem': 'Geometries', 'append': 'Separator'},
-                {'menuItem': 'Geometries', 'append': CMD_NAME},
+                {'menuItem': 'Geometries', 'append': MENU_NAME},
             ]
         return []
 

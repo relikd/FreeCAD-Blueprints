@@ -5,6 +5,7 @@ import FreeCAD
 import FreeCADGui
 
 from .helper.notify import Notify
+from .helper.utils import get_user_collection, open_in_file_manager
 from .blueprint_inserter import BlueprintInserter
 from .blueprint_loader import chooseBlueprint
 
@@ -12,8 +13,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
-
-CMD_NAME = 'Blueprints_Add'
 
 
 # see https://github.com/FreeCAD/FreeCAD/blob/f873b82f1e48632394609103e0b9071d83e46abf/src/Gui/Command.cpp#L1409
@@ -66,4 +65,40 @@ def getActiveSketchInEditMode() -> 'Sketch|None':
     return edit.Object
 
 
+CMD_NAME = 'Blueprints_Add'
 FreeCADGui.addCommand(CMD_NAME, Blueprints_Add_Cmd())
+
+
+##################################################
+# Sketcher main menu, "Blueprints" submenu entry
+##################################################
+
+class Blueprints_Open_Library:
+    def GetResources(self) -> dict[str, str]:
+        return {
+            'MenuText': 'Open Blueprints Library',
+            'ToolTip': 'Open user library location in file manager.',
+            # 'Accel': 'B, O',  # enable once #33598 is fixed
+            'CmdType': 'ForEdit AlterDoc AlterSelection',
+        }
+
+    def Activated(self) -> None:
+        open_in_file_manager(get_user_collection())
+
+
+FreeCADGui.addCommand('Blueprints_Open_Library', Blueprints_Open_Library())
+
+
+class BlueprintsMenu:
+    def GetResources(self) -> dict[str, str]:
+        return {
+            'MenuText': 'Blueprints',
+            'CmdType': 'ForEdit AlterDoc AlterSelection',
+        }
+
+    def GetCommands(self) -> list[str]:
+        return ['Blueprints_Add', 'Blueprints_Open_Library']
+
+
+MENU_NAME = 'Blueprints_Menu'
+FreeCADGui.addCommand(MENU_NAME, BlueprintsMenu())
