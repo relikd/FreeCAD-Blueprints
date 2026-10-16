@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..qt import QtWidgets, Icon, ElidedButton, OpenFileLocationAction
+from ..qt import QtGui, QtWidgets, Icon, ElidedButton, OpenFileLocationAction
 from .base import SketcherTool
 
 from typing import TYPE_CHECKING
@@ -49,7 +49,7 @@ class BlueprintSketcherTool(SketcherTool):
         rotation.setIcon(Icon.with_name('tool-allow-rotate.svg'))
         self.rotation = rotation
 
-        equal_named = QtWidgets.QCheckBox('Apply equal constraints (J)')
+        equal_named = QtWidgets.QCheckBox('Equal named constraints (J)')
         equal_named.setToolTip(
             'Create equal-constraints (named constraints only)')
         equal_named.setIcon(Icon.with_name('tool-equal-named.svg'))
