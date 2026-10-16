@@ -12,7 +12,7 @@ class PreferencesPage(QtWidgets.QWidget):
         grp = QtWidgets.QGroupBox('Local Collection')
         form = QtWidgets.QFormLayout(grp)
 
-        self.root_dir = DirChooser()
+        self.root_dir = DirChooser(btnReveal=True)
         form.addRow('Path', self.root_dir)
 
         layout = QtWidgets.QVBoxLayout(self)

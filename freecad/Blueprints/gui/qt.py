@@ -164,7 +164,7 @@ class DirChooser(QtWidgets.QWidget):
     ''' `QLineEdit` with button to choose a filesystem directory. '''
     changed = QtCore.Signal()
 
-    def __init__(self, initial: str = '') -> None:
+    def __init__(self, initial: str = '', *, btnReveal: bool = False) -> None:
         super().__init__()
 
         txt = QtWidgets.QLineEdit(initial)
@@ -181,13 +181,20 @@ class DirChooser(QtWidgets.QWidget):
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)  # QToolButton: 2, QPushButton: 6
-        layout.addWidget(txt, 1)
-        layout.addWidget(btn, 0)
+        layout.addWidget(txt)
+        layout.addWidget(btn)
 
         self.setFocusProxy(txt)
 
         txt.editingFinished.connect(self.changed)
         btn.clicked.connect(self._selectDirectory)
+
+        if btnReveal:
+            btn_open = QtWidgets.QToolButton()
+            btn_open.setIcon(QtGui.QIcon(':/icons/document-open.svg'))
+            btn_open.setToolTip('Open in filemanager.')
+            layout.addWidget(btn_open)
+            btn_open.clicked.connect(self.on_open_in_fm)
 
     @property
     def value(self) -> str:
@@ -195,6 +202,9 @@ class DirChooser(QtWidgets.QWidget):
 
     def setValue(self, value: str) -> None:
         self.txt.setText(value)
+
+    def on_open_in_fm(self) -> None:
+        open_in_file_manager(Path(self.value))
 
     def _selectDirectory(self) -> None:
         ans = QtWidgets.QFileDialog.getExistingDirectory(self, dir=self.value)
