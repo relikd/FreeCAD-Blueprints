@@ -1,4 +1,5 @@
-from ...helper.utils import get_user_collection
+from ...helper.settings import Settings
+from ...helper.utils import install_examples
 from ..qt import QtWidgets
 from .window import FileBrowser
 from typing import TYPE_CHECKING
@@ -8,7 +9,10 @@ if TYPE_CHECKING:
 
 
 def open_blueprint_browser() -> 'Path|None':
-    root = get_user_collection()
+    root = Settings.databaseDir()
+    if not root.exists():
+        # copy bundled examples
+        install_examples(root)
 
     dialog = FileBrowser(root)
 

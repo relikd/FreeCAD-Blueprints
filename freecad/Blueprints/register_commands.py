@@ -5,11 +5,12 @@ import FreeCAD
 import FreeCADGui
 
 from .helper.notify import Notify
-from .helper.utils import get_user_collection, open_in_file_manager
+from .helper.settings import Settings
+from .helper.utils import open_in_file_manager
 from .blueprint_inserter import BlueprintInserter
 from .blueprint_loader import chooseBlueprint
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
@@ -65,7 +66,7 @@ def getActiveSketchInEditMode() -> 'Sketch|None':
     return edit.Object
 
 
-CMD_NAME = 'Blueprints_Add'
+CMD_NAME: Final = 'Blueprints_Add'
 FreeCADGui.addCommand(CMD_NAME, Blueprints_Add_Cmd())
 
 
@@ -83,7 +84,7 @@ class Blueprints_Open_Library:
         }
 
     def Activated(self) -> None:
-        open_in_file_manager(get_user_collection())
+        open_in_file_manager(Settings.databaseDir())
 
 
 FreeCADGui.addCommand('Blueprints_Open_Library', Blueprints_Open_Library())
@@ -100,5 +101,5 @@ class BlueprintsMenu:
         return ['Blueprints_Add', 'Blueprints_Open_Library']
 
 
-MENU_NAME = 'Blueprints_Menu'
+MENU_NAME: Final = 'Blueprints_Menu'
 FreeCADGui.addCommand(MENU_NAME, BlueprintsMenu())

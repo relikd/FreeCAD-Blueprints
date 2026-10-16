@@ -26,7 +26,7 @@ def _data_dir() -> Path:
     return Path.home() / '.local' / 'share'
 
 
-def _install_examples(toDir: Path) -> None:
+def install_examples(toDir: Path) -> None:
     ''' Copy addon-provided examples into user-defined database dir. '''
     shutil.copytree(
         RES_ROOT / 'blueprint-examples',
@@ -34,13 +34,9 @@ def _install_examples(toDir: Path) -> None:
         dirs_exist_ok=True)
 
 
-def get_user_collection() -> Path:
-    ''' If uninitialized, copy bundled examples. Return path to collection. '''
-    # TODO: make path configurable in preferences
-    root = _data_dir() / 'FreeCAD-Blueprints' / 'Sketcher'
-    if not root.exists():
-        _install_examples(root)
-    return root
+def default_database_dir() -> Path:
+    ''' Default database dir - if not overwritten by user. '''
+    return _data_dir() / 'FreeCAD-Blueprints' / 'Sketcher'
 
 
 def open_in_file_manager(path: Path) -> None:

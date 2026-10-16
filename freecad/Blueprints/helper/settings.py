@@ -1,7 +1,10 @@
 '''
 Code related to accessing and persisting user settings.
 '''
+from pathlib import Path
 from typing import TYPE_CHECKING
+
+from .utils import default_database_dir
 
 if TYPE_CHECKING:
     from FreeCAD import ParameterGrp
@@ -10,12 +13,29 @@ if TYPE_CHECKING:
 
 class Settings:
     @staticmethod
+    def databaseDir() -> Path:
+        ''' User configured `UserCollectionDir` or fallback to default dir. '''
+        if custom := Settings.getString('UserCollectionDir'):
+            return Path(custom)
+        return default_database_dir()
+
+    #################################################
+
+    @staticmethod
     def getBool(key: str) -> bool:
         return _cfg().GetBool(key, False)
 
     @staticmethod
     def setBool(key: str, flag: bool) -> None:  # noqa: FBT001
         return _cfg().SetBool(key, flag)
+
+    @staticmethod
+    def getString(key: str) -> str:
+        return _cfg().GetString(key, '')
+
+    @staticmethod
+    def setString(key: str, value: str) -> None:
+        return _cfg().SetString(key, value)
 
     @staticmethod
     def getWinSize(name: str, fallback: tuple[int, int]) -> tuple[int, int]:

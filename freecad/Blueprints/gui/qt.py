@@ -157,3 +157,47 @@ class ElidedButton(QtWidgets.QPushButton):
             self._full_text, QtCore.Qt.TextElideMode.ElideRight, width)
         if self.text() != abbrev:
             self.setText(abbrev)
+
+
+# see https://github.com/FreeCAD/FreeCAD/blob/4a1904f8db57d4a31e44cdb1dd984d4c98447c10/src/Tools/plugins/widget/customwidgets.cpp#L136-L189
+class DirChooser(QtWidgets.QWidget):
+    ''' `QLineEdit` with button to choose a filesystem directory. '''
+    changed = QtCore.Signal()
+
+    def __init__(self, initial: str = '') -> None:
+        super().__init__()
+
+        txt = QtWidgets.QLineEdit(initial)
+        self.txt = txt
+
+        # original uses `QPushButton`, but I haven't found a way to min-size it
+        btn = QtWidgets.QToolButton()
+        btn.setText('...')
+        btn.setFixedWidth(2 * btn.fontMetrics().horizontalAdvance(' ... '))
+        btn.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Fixed,
+            QtWidgets.QSizePolicy.Policy.Preferred)
+
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)  # QToolButton: 2, QPushButton: 6
+        layout.addWidget(txt, 1)
+        layout.addWidget(btn, 0)
+
+        self.setFocusProxy(txt)
+
+        txt.editingFinished.connect(self.changed)
+        btn.clicked.connect(self._selectDirectory)
+
+    @property
+    def value(self) -> str:
+        return self.txt.text()
+
+    def setValue(self, value: str) -> None:
+        self.txt.setText(value)
+
+    def _selectDirectory(self) -> None:
+        ans = QtWidgets.QFileDialog.getExistingDirectory(self, dir=self.value)
+        if ans:
+            self.txt.setText(ans)
+            self.changed.emit()
