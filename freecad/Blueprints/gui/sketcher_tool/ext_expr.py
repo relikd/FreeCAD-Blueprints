@@ -2,7 +2,6 @@ import FreeCAD
 import FreeCADGui
 
 from ...helper.settings import Settings
-from ...helper.utils import camel_case_name
 from ...blueprint_duplicator import detect_external
 from ..qt import QtWidgets
 
@@ -23,24 +22,21 @@ def make_form(src: 'Sketch') -> QtWidgets.QFormLayout:
     form = QtWidgets.QFormLayout()
     form.setObjectName('expr_map')
 
-    for key, (obj, prop) in sorted(detect_external(src).items()):
-        type_id = obj.getTypeIdOfProperty(prop)
-        tooltip = obj.getDocumentationOfProperty(prop).strip()
-
+    for expref in detect_external(src):
+        tooltip = expref.tooltip()
         # label
-        # The naming wont work with nested variables.
-        # But we don't have support for these anyway.
-        lbl = QtWidgets.QLabel(camel_case_name(key.rsplit('.', 1)[-1]))
-        lbl.setToolTip(f'type: {type_id}\nkey: {key}\n\n{tooltip}'.rstrip())
+        lbl = QtWidgets.QLabel(expref.display_name)
+        lbl.setToolTip(
+            f'type: {expref.type_id}\nkey: {expref.key}\n\n{tooltip}'.rstrip())
 
         # input field
-        if w := _property_to_widget(obj, prop):
+        if w := _property_to_widget(expref.obj, expref.prop):
             w.setToolTip(tooltip)
-            w.setProperty(PRFX, key)
-            w.setProperty(PRFX + 'type', type_id)
+            w.setProperty(PRFX, expref.key)
+            w.setProperty(PRFX + 'type', expref.type_id)
         else:
             w = QtWidgets.QLabel('--unsupported--')
-            w.setToolTip(f'No editor for type: {type_id}')
+            w.setToolTip(f'No editor for type: {expref.type_id}')
             # don't `setProperty`, so they are not evaluated below
 
         form.addRow(lbl, w)

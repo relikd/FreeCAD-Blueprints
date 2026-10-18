@@ -8,7 +8,7 @@ from .helper.constraints import Constr
 from .helper.geodraw import Draw, moveTo
 from .helper.georef import GeoId, GeoRef, PointPos
 from .helper.notify import Notify
-from .helper.utils import default_props
+from .helper.utils import default_props, camel_case_name
 
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from FreeCAD import Vector, DocumentObject as DocObj
     from Part import Geometry
     NamedEquals = dict[str, str]
-    ExternalExpressionsDict = dict[str, tuple[DocObj, str]]
     ExternalExpressionsRepl = dict[str, str]
 
 
@@ -355,15 +354,25 @@ def _constrain_origin(dst: 'Sketch', origin: GeoRef, toTarget: GeoRef) -> None:
 rx_ext_expr = re.compile(r'[\w_.<>]+')
 
 
-def detect_external(src: 'Sketch') -> 'ExternalExpressionsDict':
-    '''
-    Detect if expression engine uses any external references like VarSet.
-    Where object is either `Sketch` or `VarSet` (use `getPropertyByName()`).
+@dataclass
+class ExtExprRef:
+    obj: 'DocObj'  # document object (either `Sketch` or `VarSet`)
+    key: str  # string as used by the expression engine
+    prop: str  # property name (removed "VarSet." and "." prefix)
 
-    Returns: `{expr-substring: (object, property-name)}`.
-    '''
-    rv: ExternalExpressionsDict = {}
+    def __post_init__(self):
+        # The naming wont work with nested variables.
+        # But we don't have support for these anyway.
+        self.display_name = camel_case_name(self.prop)
+        self.type_id = self.obj.getTypeIdOfProperty(self.prop)
 
+    def tooltip(self) -> str:
+        ''' `obj.getDocumentationOfProperty(prop).strip()` '''
+        return self.obj.getDocumentationOfProperty(self.prop).strip()
+
+
+def detect_external(src: 'Sketch') -> list[ExtExprRef]:
+    '''Detect if expression engine uses any external references like VarSet.'''
     # find actually used references
     concat = '|'.join(expr for _, expr in src.ExpressionEngine) + '|'
     used = {x.group() for x in rx_ext_expr.finditer(concat)
@@ -371,17 +380,19 @@ def detect_external(src: 'Sketch') -> 'ExternalExpressionsDict':
 
     # find potentially referencable props
     v_ignore, s_ignore = default_props('App::VarSet', 'Sketcher::SketchObject')
+    rv = []
 
-    # sketch properties
+    # sketch properties ("name" and ".name")
     sk_props = set(src.PropertiesList) - s_ignore
     for prop in used.intersection(sk_props | {'.' + x for x in sk_props}):
-        rv[prop] = (src, prop.removeprefix('.'))
+        rv.append(ExtExprRef(src, key=prop, prop=prop.removeprefix('.')))
 
-    # VarSets
+    # VarSets ("Name." and "<<Label>>.")
     for varset in src.Document.findObjects('App::VarSet'):
         var_props = set(varset.PropertiesList) - v_ignore
         for prop in used.intersection({n for x in var_props for n in (
                 f'{varset.Name}.{x}', f'<<{varset.Label}>>.{x}')}):
-            rv[prop] = (varset, prop.split('.', 1)[1])
+            rv.append(ExtExprRef(varset, key=prop, prop=prop.split('.', 1)[1]))
 
+    rv.sort(key=lambda x: x.display_name.casefold())
     return rv
