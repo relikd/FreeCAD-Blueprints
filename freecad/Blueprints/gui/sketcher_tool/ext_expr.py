@@ -113,15 +113,24 @@ def collect_fields(form: QtWidgets.QFormLayout) -> 'ExternalExpressionsRepl':
         elif isinstance(field, QtWidgets.QComboBox):
             rv[key] = str(field.currentIndex())
         elif isinstance(field, (QtWidgets.QLabel, QtWidgets.QLineEdit)):
-            rv[key] = '<<' + field.text() + '>>'
+            rv[key] = _escape_fc_string(field.text())
         elif isinstance(field, (QtWidgets.QSpinBox, QtWidgets.QDoubleSpinBox)):
             rv[key] = str(field.value())
         elif cls := field.metaObject().className():
             if cls == 'Gui::QuantitySpinBox':
                 rv[key] = str(field.property('value'))
             elif cls == 'Gui::FileChooser':
-                rv[key] = '<<' + str(field.property('fileName')) + '>>'
+                rv[key] = _escape_fc_string(field.property('fileName'))
     return rv
+
+
+def _escape_fc_string(txt: str) -> str:
+    ''' Escape string sequence for inserting into expression engine. '''
+    # TODO: Cannot reliably escape string.
+    # String is either truncated, or expression engine silently removes ">".
+    # But at least, FreeCAD wont crash if someone uses a ">".
+    # There are probably other chars that need escaping too ...
+    return '<<' + str(txt).replace('>', '\\>') + '>>'
 
 
 #################################################
