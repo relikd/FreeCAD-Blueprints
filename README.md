@@ -49,8 +49,8 @@ If the file contains multiple sketches, a popup will ask you which sketch to loa
 	- [ ] shortcut to create new document in user-collection
 	- [ ] create empty sketch via `Part` (avoids a body object)
 	- [ ] usage instructions (`desc` property, fully constrain to origin, ...)
-- [ ] Preferences page
-	- [ ] manage location of user-collection
+- [x] Preferences page
+	- [x] manage location of user-collection
 	- [ ] manage subscriptions (with update button?, we need versions)
 - [ ] Allow bp-creators to define variables?
 	- [ ] either by Sketch properties or via `VarSet`
