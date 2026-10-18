@@ -56,12 +56,19 @@ class Settings:
     class View:
         @staticmethod
         def background_color() -> tuple[int, int, int, int]:
+            ''' Background color of 3D view. '''
             val = _cfg('View').GetUnsigned('BackgroundColor')
             r = (val >> 24) & 0xff
             g = (val >> 16) & 0xff
             b = (val >> 8) & 0xff
             a = val & 0xff
             return r, g, b, a
+
+    class Units:
+        @staticmethod
+        def decimals() -> int:
+            ''' Number of decimals (default: 2). '''
+            return _cfg('Units').GetInt('Decimals', 2)
 
 
 #################################################

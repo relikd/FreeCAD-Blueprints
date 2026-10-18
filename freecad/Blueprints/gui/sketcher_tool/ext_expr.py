@@ -1,6 +1,7 @@
 import FreeCAD
 import FreeCADGui
 
+from ...helper.settings import Settings
 from ...helper.utils import camel_case_name
 from ...blueprint_duplicator import detect_external
 from ..qt import QtWidgets
@@ -10,7 +11,6 @@ from collections.abc import Iterator
 
 if TYPE_CHECKING:
     from FreeCAD import DocumentObject as DocObj
-    from FreeCAD.Base import Quantity
     from Sketcher import SketchObject as Sketch
     from ...blueprint_duplicator import ExternalExpressionsRepl
 
@@ -160,6 +160,7 @@ _QUANTITY_TYPES = {
 }
 
 
+# see https://github.com/FreeCAD/FreeCAD/blob/088f49373da7309845471e5286b2f6deb69ec8d7/src/Mod/BIM/ArchComponent.py#L2844-L2853
 def _property_to_widget(obj: 'DocObj', prop: str) -> 'QtWidgets.QWidget|None':
     ''' Convert single property field to form field. '''
     type_id = obj.getTypeIdOfProperty(prop)
@@ -174,18 +175,27 @@ def _property_to_widget(obj: 'DocObj', prop: str) -> 'QtWidgets.QWidget|None':
         w = _field('Gui::ExpLineEdit')
         w.setText(getattr(obj, prop))
 
-    elif type_id == 'App::PropertyInteger':
+    elif type_id in ('App::PropertyInteger', 'App::PropertyPercent'):
         w = _field('Gui::IntSpinBox')
         w.setValue(getattr(obj, prop))
+        if type_id == 'App::PropertyPercent':
+            w.setMinimum(0)
+            w.setMaximum(100)
 
     elif type_id == 'App::PropertyFloat':
         w = _field('Gui::DoubleSpinBox')
+        w.setDecimals(Settings.Units.decimals())
+        w.setRange(-(2**31), 2**31)
         w.setValue(getattr(obj, prop))
 
     elif type_id == 'App::PropertyEnumeration':
         w = QtWidgets.QComboBox()
         w.addItems(obj.getEnumerationsOfProperty(prop))
-        w.setCurrentText(getattr(obj, prop))
+        w.setSizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        w.setMinimumContentsLength(20)
+        idx = w.findText(getattr(obj, prop))
+        if idx >= 0:
+            w.setCurrentIndex(idx)
 
     elif type_id == 'App::PropertyFile':
         # App::PropertyPath is harder because we cant set mode via setProperty
@@ -194,9 +204,10 @@ def _property_to_widget(obj: 'DocObj', prop: str) -> 'QtWidgets.QWidget|None':
 
     elif type_id in _QUANTITY_TYPES:
         w = _field('Gui::QuantitySpinBox')
-        qty: Quantity = getattr(obj, prop)
-        w.setProperty('unit', qty.getUserPreferred()[2])
-        w.setProperty('rawValue', qty.Value)
+        # qty: Quantity = getattr(obj, prop)
+        # w.setProperty('unit', qty.getUserPreferred()[2])
+        # w.setProperty('rawValue', qty.Value)
+        w.setProperty('value', getattr(obj, prop))
 
     else:
         return None
