@@ -60,3 +60,20 @@ def open_in_file_manager(path: Path) -> None:
     if args:
         # Audited: fixed arguments, resolved cmds (B603)
         run(args, check=False)  # nosec B603  # noqa: S603
+
+
+_DEFAULT_PROPS_CACHE: dict[str, set[str]] = {}
+
+
+def default_props(*doc_types: str) -> list[set[str]]:
+    '''Default properties for document-object (without user-modifications).'''
+    if remaining := set(doc_types) - _DEFAULT_PROPS_CACHE.keys():
+        import FreeCAD  # noqa: PLC0415
+        doc = FreeCAD.newDocument(hidden=True, temp=True)
+        rv = [set(doc.addObject(x).PropertiesList) for x in remaining]
+        FreeCAD.closeDocument(doc.Name)
+        for k, v in zip(remaining, rv):
+            _DEFAULT_PROPS_CACHE[k] = v
+
+    # cache results so we don't create new documents on each blueprint load
+    return [_DEFAULT_PROPS_CACHE[x] for x in doc_types]

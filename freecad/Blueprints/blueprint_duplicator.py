@@ -8,14 +8,17 @@ from .helper.constraints import Constr
 from .helper.geodraw import Draw, moveTo
 from .helper.georef import GeoId, GeoRef, PointPos
 from .helper.notify import Notify
+from .helper.utils import default_props
 
 from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
-    from FreeCAD import Vector
+    from FreeCAD import Vector, DocumentObject as DocObj
     from Part import Geometry
     NamedEquals = dict[str, str]
+    ExternalExpressionsDict = dict[str, tuple[DocObj, str]]
+    ExternalExpressionsRepl = dict[str, str]
 
 
 def _validate(sketch: 'Sketch') -> None:
@@ -50,6 +53,7 @@ class BlueprintDuplicator:
     allowRotate: bool
     hideUnnamed: bool
     namedEquals: 'NamedEquals'  # use empty dict to ignore
+    externalExpressions: 'ExternalExpressionsRepl'
 
     def copyTo(self, dst: 'Sketch', *, src: 'Sketch') -> None:
         ''' Copy a sketch from one document to another. '''
@@ -67,7 +71,7 @@ class BlueprintDuplicator:
         shifter = IdShifter(dst, axis, self.namedEquals)
         _copy_geometry(src, dst, self.placement)
         _copy_constraints(src, dst, shifter)
-        _copy_expressions(src, dst, shifter)
+        _copy_expressions(src, dst, shifter, self.externalExpressions)
 
         # TODO: don't hide equal-names constraints
         # - If `allowRotate`, then `hideUnnamed`:
@@ -311,11 +315,21 @@ def _copy_constraints(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
     # dst.solve()  # no need, done at the end
 
 
-def _copy_expressions(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
+def _copy_expressions(
+    src: 'Sketch', dst: 'Sketch', shiftr: IdShifter,
+    extExprMap: 'ExternalExpressionsRepl',
+) -> None:
     ''' Duplicate expressions. Indices shifted according to `IdShifter`. '''
-    for field, val in src.ExpressionEngine:
+    for field, expr_str in src.ExpressionEngine:
         if field.startswith(('Constraints[', '.Constraints.')):
-            dst.setExpression(shiftr.reindex(field), shiftr.reindex(val))
+            new_expr = shiftr.reindex(expr_str)
+            if extExprMap:
+                # TODO: remove expression for plain-num expressions
+                new_expr = rx_ext_expr.sub(lambda x, with_end=new_expr + ' ':
+                    repl if (repl := extExprMap.get(x.group())) is not None
+                    and with_end[x.end()] != '(' else x.group(),
+                    new_expr)
+            dst.setExpression(shiftr.reindex(field), new_expr)
         else:
             Notify.Log.err(f'Unhandled expr variant: "{field}". '
                            'Please report this error on GitHub.')
@@ -332,3 +346,42 @@ def _constrain_origin(dst: 'Sketch', origin: GeoRef, toTarget: GeoRef) -> None:
         dst.addConstraint(Constr.PointOnObject(origin, toTarget.geoid))
     else:
         dst.addConstraint(Constr.Coincident(toTarget, origin))
+
+
+#################################################
+# External expressions
+#################################################
+
+rx_ext_expr = re.compile(r'[a-zA-Z0-9_.<>]+')
+
+
+def detect_external(src: 'Sketch') -> 'ExternalExpressionsDict':
+    '''
+    Detect if expression engine uses any external references like VarSet.
+    Where object is either `Sketch` or `VarSet` (use `getPropertyByName()`).
+
+    Returns: `{expr-substring: (object, property-name)}`.
+    '''
+    rv: ExternalExpressionsDict = {}
+
+    # find actually used references
+    concat = '|'.join(expr for _, expr in src.ExpressionEngine) + '|'
+    used = {x.group() for x in rx_ext_expr.finditer(concat)
+            if concat[x.end()] != '('}  # excluding "name()" (command calls)
+
+    # find potentially referencable props
+    v_ignore, s_ignore = default_props('App::VarSet', 'Sketcher::SketchObject')
+
+    # sketch properties
+    sk_props = set(src.PropertiesList) - s_ignore
+    for prop in used.intersection(sk_props | {'.' + x for x in sk_props}):
+        rv[prop] = (src, prop.removeprefix('.'))
+
+    # VarSets
+    for varset in src.Document.findObjects('App::VarSet'):
+        var_props = set(varset.PropertiesList) - v_ignore
+        for prop in used.intersection({n for x in var_props for n in (
+                f'{varset.Name}.{x}', f'<<{varset.Label}>>.{x}')}):
+            rv[prop] = (varset, prop.split('.', 1)[1])
+
+    return rv

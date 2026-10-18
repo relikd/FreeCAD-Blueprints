@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..qt import QtGui, QtWidgets, Icon, ElidedButton, OpenFileLocationAction
+from ..qt import QtWidgets, Icon, ElidedButton, OpenFileLocationAction
 from .base import SketcherTool
+from .ext_expr import collect_fields, expr_cleanup, install_bindings, make_form
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ...blueprint_duplicator import ExternalExpressionsRepl
     from ...blueprint_inserter import BlueprintInserter
 
 
@@ -15,6 +17,7 @@ class State:
     rotation: bool
     equal_named: bool
     hide_unnamed: bool
+    repl_expr: 'ExternalExpressionsRepl'
 
 
 class BlueprintSketcherTool(SketcherTool):
@@ -59,11 +62,23 @@ class BlueprintSketcherTool(SketcherTool):
         hide_unnamed.setToolTip('Only show named constraints in Sketcher')
         self.hide_unnamed = hide_unnamed
 
+        self.form = make_form(inserter.blueprint)
+
         layout = QtWidgets.QVBoxLayout(self)
+        if self.form.rowCount() > 0:
+            layout.addLayout(self.form)
+            layout.addSpacerItem(QtWidgets.QSpacerItem(0, 12))
         layout.addWidget(rotation)
         layout.addWidget(equal_named)
         layout.addWidget(hide_unnamed)
         layout.addLayout(fileinfo)
+
+        # interconnections
+        install_bindings(self.form, inserter.current)  # adds (fx) button
+
+    def stop(self) -> None:
+        expr_cleanup(self.form, self.inserter.current)
+        super().stop()
 
     def on_hotkey(self, letter: str) -> bool:
         if letter == 'M':
@@ -79,6 +94,7 @@ class BlueprintSketcherTool(SketcherTool):
             rotation=self.rotation.isChecked(),
             equal_named=self.equal_named.isChecked(),
             hide_unnamed=self.hide_unnamed.isChecked(),
+            repl_expr=collect_fields(self.form),
         )
 
     def on_edit_sketch(self) -> None:

@@ -52,9 +52,9 @@ If the file contains multiple sketches, a popup will ask you which sketch to loa
 - [x] Preferences page
 	- [x] manage location of user-collection
 	- [ ] manage subscriptions (with update button?, we need versions)
-- [ ] Allow bp-creators to define variables?
-	- [ ] either by Sketch properties or via `VarSet`
-	- [ ] how are multiple instances handled?
+- [x] Allow bp-creators to define variables?
+	- [x] either by Sketch properties or via `VarSet` (-> both)
+	- [x] how are multiple instances handled? (-> direct evaluation)
 - [ ] General improvements
 	- [ ] Qt string translations
 - [ ] Community managed content

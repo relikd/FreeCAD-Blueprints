@@ -129,6 +129,7 @@ class BlueprintInserter:
             allowRotate=options.rotation,
             hideUnnamed=options.hide_unnamed,
             namedEquals=self.prev_state,
+            externalExpressions=options.repl_expr,
         )
         thisDoc = self.current.Document
         thisDoc.openTransaction('Insert Blueprint (Sketch)')
