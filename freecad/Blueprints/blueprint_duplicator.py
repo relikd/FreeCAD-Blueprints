@@ -352,7 +352,7 @@ def _constrain_origin(dst: 'Sketch', origin: GeoRef, toTarget: GeoRef) -> None:
 # External expressions
 #################################################
 
-rx_ext_expr = re.compile(r'[a-zA-Z0-9_.<>]+')
+rx_ext_expr = re.compile(r'[\w_.<>]+')
 
 
 def detect_external(src: 'Sketch') -> 'ExternalExpressionsDict':
