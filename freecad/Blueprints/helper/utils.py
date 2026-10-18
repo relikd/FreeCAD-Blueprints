@@ -62,6 +62,19 @@ def open_in_file_manager(path: Path) -> None:
         run(args, check=False)  # nosec B603  # noqa: S603
 
 
+def camel_case_name(string: str, sep: str = ' ') -> str:
+    ''' Insert separator between lower case and upper case letters. '''
+    rv = ''
+    prev = True
+    for c in string:
+        cur = c.isupper()
+        if cur and not prev:
+            rv += sep
+        prev = cur
+        rv += c
+    return rv
+
+
 _DEFAULT_PROPS_CACHE: dict[str, set[str]] = {}
 
 

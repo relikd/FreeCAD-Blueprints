@@ -1,6 +1,7 @@
 import FreeCAD
 import FreeCADGui
 
+from ...helper.utils import camel_case_name
 from ...blueprint_duplicator import detect_external
 from ..qt import QtWidgets
 
@@ -27,7 +28,9 @@ def make_form(src: 'Sketch') -> QtWidgets.QFormLayout:
         tooltip = obj.getDocumentationOfProperty(prop).strip()
 
         # label
-        lbl = QtWidgets.QLabel(key)
+        # The naming wont work with nested variables.
+        # But we don't have support for these anyway.
+        lbl = QtWidgets.QLabel(camel_case_name(key.rsplit('.', 1)[-1]))
         lbl.setToolTip(f'type: {type_id}\nkey: {key}\n\n{tooltip}'.rstrip())
 
         # input field
