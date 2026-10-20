@@ -5,7 +5,9 @@ import re
 from dataclasses import dataclass
 
 from .helper.notify import Notify
-from .logic.sketcher import Constr, Draw, moveTo, GeoId, GeoRef, PointPos
+from .logic.sketcher.constraints import Constr
+from .logic.sketcher.geodraw import Draw, moveTo
+from .logic.sketcher.georef import GeoId, GeoRef, PointPos
 
 from typing import TYPE_CHECKING, NamedTuple
 

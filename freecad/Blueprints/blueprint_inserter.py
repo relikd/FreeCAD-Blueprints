@@ -11,7 +11,6 @@ from .events.hotkey_listener import HotkeyListener
 from .events.mouse_click_listener import MouseClickListener, UserSelection
 from .events.mouse_cursor_listener import MouseCursorListener
 from .gui.sketcher_tool import BlueprintSketcherTool
-from .blueprint_duplicator import BlueprintDuplicator
 from .blueprint_loader import reloadSketch
 
 from typing import TYPE_CHECKING
@@ -118,6 +117,7 @@ class BlueprintInserter:
         self.close(postponeCursorCleanup=True)
 
     def did_click(self, sel: UserSelection) -> None:
+        from .blueprint_duplicator import BlueprintDuplicator  # noqa: PLC0415
         options = self.sketcher_tool.get_state()
         if not options.equal_named:
             # If we dont want `namedEquals`, clear the state before each run.
