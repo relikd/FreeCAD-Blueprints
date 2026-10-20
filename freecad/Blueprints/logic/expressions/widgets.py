@@ -83,7 +83,9 @@ def property_to_widget(obj: 'DocObj', prop: str) -> QtWidgets.QWidget:
 
     else:
         w = QtWidgets.QLabel('--unsupported--')
-        w.setToolTip(f'No editor for type: {type_id}')
+        w.setToolTip(
+            f'No editor support for type: {type_id}. If you have a use-case '
+            'for this type, make a feature request on GitHub.')
         return w
 
     # copy tooltip from property
