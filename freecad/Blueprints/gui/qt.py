@@ -186,6 +186,7 @@ class DirChooser(QtWidgets.QWidget):
 
         self.setFocusProxy(txt)
 
+        txt.textEdited.connect(self.install_path_completer)
         txt.editingFinished.connect(self.changed)
         btn.clicked.connect(self._selectDirectory)
 
@@ -211,6 +212,16 @@ class DirChooser(QtWidgets.QWidget):
         if ans:
             self.txt.setText(ans)
             self.changed.emit()
+
+    def install_path_completer(self, _text: str) -> None:
+        ''' Install postponed until first typing. '''
+        self.txt.textEdited.disconnect(self.install_path_completer)  # once
+
+        model = QtWidgets.QFileSystemModel(self.txt)
+        model.setRootPath(self.txt.text())
+        completer = QtWidgets.QCompleter(model, self.txt)
+        completer.setCaseSensitivity(QtCore.Qt.CaseSensitivity.CaseInsensitive)
+        self.txt.setCompleter(completer)
 
 
 @overload
