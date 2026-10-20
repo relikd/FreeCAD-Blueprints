@@ -8,7 +8,7 @@ import FreeCADGui
 
 from ...gui.qt import QtWidgets
 from .detector import detect_external
-from .widgets import property_to_widget, widget_to_value
+from .widgets import property_to_widget
 
 from typing import TYPE_CHECKING
 
@@ -62,10 +62,6 @@ class UserExprField:
             # ignore Qt object already deleted (Cmd+Q while editing sketch)
             pass
         dst.removeProperty(self.bind_key)  # does not need to exist
-
-    def value(self) -> str:
-        ''' Read string value from form field. '''
-        return widget_to_value(self.field)
 
 
 def make_form_fields(src: 'Sketch', dst: 'Sketch') \

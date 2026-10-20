@@ -2,9 +2,10 @@
 Read back user-provided form fields and replace existing expressions.
 '''
 import re
-from dataclasses import dataclass
 
-from typing import TYPE_CHECKING
+from .widgets import widget_to_value
+
+from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
@@ -21,25 +22,33 @@ def detect_vars(expr: str) -> set[str]:
     return {x.group() for x in _rx.finditer(expr) if expr[x.end()] != '('}
 
 
-@dataclass
-class ExprReplacer:
-    expr_map: dict[str, str]
+class Val(NamedTuple):
+    value: str
+    is_expr: bool
 
+
+class ExprReplacer(dict[str, Val]):
     def __init__(self, fields: list['UserExprField'], dst: 'Sketch') -> None:
         '''Read back user provided values (either expression or raw value).'''
         if fields:
             engine = dict(dst.ExpressionEngine)
-            self.expr_map = {
-                x.key: engine.get(x.bind_key) or x.value() for x in fields
-            }
-        else:
-            self.expr_map = {}
+            for x in fields:
+                if exp := engine.get(x.bind_key):
+                    self[x.key] = Val(exp, True)
+                elif val := widget_to_value(x.field):
+                    self[x.key] = Val(val, False)
 
-    def apply(self, expr: str) -> str:
-        ''' Find var-ref occurrences and replace with user-provided value. '''
-        if not self.expr_map:
-            return expr
-        return _rx.sub(lambda x, with_end=expr + ' ':
-            repl if (repl := self.expr_map.get(x.group())) is not None
+    def apply(self, expr: str) -> tuple[bool, str]:
+        '''
+        Find var-ref occurrences and replace with user-provided value.
+        Returns `(True, _)` if the source expression is just a single variable
+        AND the user-provided expression is a plain value.
+        '''
+        if not self:
+            return False, expr
+        if fullmatch := self.get(expr):
+            return not fullmatch.is_expr, fullmatch.value
+        return False, _rx.sub(lambda x, with_end=expr + ' ':
+            repl.value if (repl := self.get(x.group())) is not None
             and with_end[x.end()] != '(' else x.group(),
             expr)

@@ -95,7 +95,7 @@ def property_to_widget(obj: 'DocObj', prop: str) -> QtWidgets.QWidget:
 # Map input field back to property (str)
 #################################################
 
-def widget_to_value(field: QtWidgets.QWidget) -> str:
+def widget_to_value(field: QtWidgets.QWidget) -> 'str|None':
     ''' Read string value from form field. '''
     if isinstance(field, QtWidgets.QCheckBox):
         return '1' if field.isChecked() else '0'
@@ -110,7 +110,7 @@ def widget_to_value(field: QtWidgets.QWidget) -> str:
         return str(field.property('value'))
     if cls == 'Gui::FileChooser':
         return _escape_fc_string(field.property('fileName'))
-    return ''
+    return None
 
 
 def _escape_fc_string(txt: str) -> str:

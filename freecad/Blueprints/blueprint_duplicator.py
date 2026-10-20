@@ -319,10 +319,15 @@ def _copy_expressions(
     ''' Duplicate expressions. Indices shifted according to `IdShifter`. '''
     for field, expr_str in src.ExpressionEngine:
         if field.startswith(('Constraints[', '.Constraints.')):
+            new_name = shiftr.reindex(field)
             # first reindex, then replace external expressions
-            new_expr = repl_expr.apply(shiftr.reindex(expr_str))
-            # TODO: remove expression for plain-num expressions
-            dst.setExpression(shiftr.reindex(field), new_expr)
+            is_fullmatch, new_expr = repl_expr.apply(shiftr.reindex(expr_str))
+            dst.setExpression(new_name, new_expr)
+            if is_fullmatch:
+                # Even though we reset it immediately after setting it,
+                # the computed value is persisted as non-computed value.
+                # TODO: add an option to allow that for all computed values
+                dst.setExpression(new_name, None)
         else:
             Notify.Log.err(f'Unhandled expr variant: "{field}". '
                            'Please report this error on GitHub.')
