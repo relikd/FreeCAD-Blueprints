@@ -4,10 +4,8 @@ Code related to copying geometry from one Sketch to another.
 import re
 from dataclasses import dataclass
 
-from .helper.constraints import Constr
-from .helper.geodraw import Draw, moveTo
-from .helper.georef import GeoId, GeoRef, PointPos
 from .helper.notify import Notify
+from .logic.sketcher import Constr, Draw, moveTo, GeoId, GeoRef, PointPos
 
 from typing import TYPE_CHECKING, NamedTuple
 

@@ -4,18 +4,6 @@ Code related to geometry manipulation (mostly creation / manually drawing)
 from FreeCAD import Vector
 from Part import LineSegment, Point, Circle
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from Part import Geometry
-
-
-def moveTo(pos: 'Vector|None', geo: 'Geometry') -> 'Geometry':
-    ''' Move geometry and return it (allows chaining). '''
-    if pos:
-        geo.translate(pos)
-    return geo
-
 
 class Draw:
     @staticmethod

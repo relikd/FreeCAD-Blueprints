@@ -5,7 +5,7 @@ import FreeCADGui  # Selection
 from FreeCAD import Vector
 
 from ..gui.qt import QtCore
-from ..helper.georef import GeoId, GeoRef, PointPos
+from ..logic.sketcher import GeoId, GeoRef, PointPos
 
 from typing import TYPE_CHECKING, Callable, NamedTuple
 
