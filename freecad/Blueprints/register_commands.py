@@ -4,12 +4,6 @@ Code related to command registration. Do as little logic as possible.
 import FreeCAD
 import FreeCADGui
 
-from .helper.notify import Notify
-from .helper.settings import Settings
-from .helper.utils import open_in_file_manager
-from .blueprint_inserter import BlueprintInserter
-from .blueprint_loader import chooseBlueprint
-
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
@@ -36,6 +30,9 @@ class Blueprints_Add_Cmd:
 
     def Activated(self) -> None:
         ''' Open sketch from another file. '''
+        from .helper.notify import Notify  # noqa: PLC0415
+        from .blueprint_inserter import BlueprintInserter  # noqa: PLC0415
+        from .blueprint_loader import chooseBlueprint  # noqa: PLC0415
         thisDoc = FreeCAD.ActiveDocument
         if not thisDoc:
             Notify.err('No Active Document', 'No active document found.')
@@ -84,6 +81,8 @@ class Blueprints_Open_Library:
         }
 
     def Activated(self) -> None:
+        from .helper.settings import Settings  # noqa: PLC0415
+        from .helper.utils import open_in_file_manager  # noqa: PLC0415
         open_in_file_manager(Settings.databaseDir())
 
 
