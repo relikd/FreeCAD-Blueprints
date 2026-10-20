@@ -7,7 +7,7 @@ from pathlib import Path
 from ..helper.utils import RES_ROOT, open_in_file_manager
 from ..helper.settings import Settings
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Literal, overload
 
 if TYPE_CHECKING:  # switch between "PySide6" (dev) and "PySide" (dist)
     from PySide6 import QtCore, QtGui, QtWidgets
@@ -211,3 +211,17 @@ class DirChooser(QtWidgets.QWidget):
         if ans:
             self.txt.setText(ans)
             self.changed.emit()
+
+
+@overload
+def FCWidget(name: Literal['Gui::ExpLineEdit']) -> QtWidgets.QLineEdit: ...
+@overload
+def FCWidget(name: Literal['Gui::IntSpinBox']) -> QtWidgets.QSpinBox: ...
+@overload
+def FCWidget(name: Literal['Gui::DoubleSpinBox']) -> QtWidgets.QDoubleSpinBox: ...  # noqa: E501
+@overload
+def FCWidget(name: str) -> QtWidgets.QWidget: ...
+def FCWidget(name: str) -> 'QtWidgets.QWidget':
+    ''' Load FreeCAD internal widget. '''
+    import FreeCADGui  # noqa: PLC0415
+    return FreeCADGui.UiLoader().createWidget(name)  # type: ignore[attr-defined]

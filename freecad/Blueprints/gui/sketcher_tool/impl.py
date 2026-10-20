@@ -1,14 +1,13 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from ...logic.expressions import make_form_fields, ExprReplacer
 from ..qt import QtWidgets, Icon, ElidedButton, OpenFileLocationAction
 from .base import SketcherTool
-from .ext_expr import collect_fields, expr_cleanup, install_bindings, make_form
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...blueprint_duplicator import ExternalExpressionsRepl
     from ...blueprint_inserter import BlueprintInserter
 
 
@@ -17,7 +16,7 @@ class State:
     rotation: bool
     equal_named: bool
     hide_unnamed: bool
-    repl_expr: 'ExternalExpressionsRepl'
+    repl_expr: ExprReplacer
 
 
 class BlueprintSketcherTool(SketcherTool):
@@ -27,12 +26,12 @@ class BlueprintSketcherTool(SketcherTool):
     def __init__(self, inserter: 'BlueprintInserter') -> None:
         super().__init__()
         self.inserter = inserter
-        sketch = inserter.blueprint
-        path = Path(sketch.Document.FileName)
+        src, dst = inserter.blueprint, inserter.current
+        path = Path(src.Document.FileName)
 
         # blueprint source file info
-        if sketch.Name != sketch.Label:
-            shortname = f'{sketch.Label} ({path.name})'
+        if src.Name != src.Label:
+            shortname = f'{src.Label} ({path.name})'
         else:
             shortname = path.name
         file_combo = ElidedButton(shortname)
@@ -43,7 +42,7 @@ class BlueprintSketcherTool(SketcherTool):
         file_combo.setMenu(file_combo_menu)
 
         fileinfo = QtWidgets.QHBoxLayout()
-        fileinfo.addWidget(QtWidgets.QLabel(f'Source ({sketch.DoF} DoF):'))
+        fileinfo.addWidget(QtWidgets.QLabel(f'Source ({src.DoF} DoF):'))
         fileinfo.addWidget(file_combo, 1)  # use full width
 
         # insert options
@@ -62,22 +61,20 @@ class BlueprintSketcherTool(SketcherTool):
         hide_unnamed.setToolTip('Only show named constraints in Sketcher')
         self.hide_unnamed = hide_unnamed
 
-        self.form = make_form(inserter.blueprint)
+        form, self.expr_fields = make_form_fields(src, dst)
 
         layout = QtWidgets.QVBoxLayout(self)
-        if self.form.rowCount() > 0:
-            layout.addLayout(self.form)
+        if form.rowCount() > 0:
+            layout.addLayout(form)
             layout.addSpacerItem(QtWidgets.QSpacerItem(0, 12))
         layout.addWidget(rotation)
         layout.addWidget(equal_named)
         layout.addWidget(hide_unnamed)
         layout.addLayout(fileinfo)
 
-        # interconnections
-        install_bindings(self.form, inserter.current)  # adds (fx) button
-
     def stop(self) -> None:
-        expr_cleanup(self.form, self.inserter.current)
+        for field in self.expr_fields:
+            field.cleanup(self.inserter.current)
         super().stop()
 
     def on_hotkey(self, letter: str) -> bool:
@@ -94,7 +91,7 @@ class BlueprintSketcherTool(SketcherTool):
             rotation=self.rotation.isChecked(),
             equal_named=self.equal_named.isChecked(),
             hide_unnamed=self.hide_unnamed.isChecked(),
-            repl_expr=collect_fields(self.form),
+            repl_expr=ExprReplacer(self.expr_fields, self.inserter.current),
         )
 
     def on_edit_sketch(self) -> None:
