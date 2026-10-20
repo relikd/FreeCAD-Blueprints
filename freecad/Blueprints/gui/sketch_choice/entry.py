@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from ...helper.properties import Props
 from ..pixmap_cache import PixmapFactory
 from ..thumbnail import sketch_thumbnail
 
@@ -21,6 +20,6 @@ class DataItem:
     def __init__(self, args: tuple[int, 'Sketch']) -> None:
         self.index, sk = args
         self.title = sk.Label
-        self.desc = Props.text(sk, 'desc')
-        self.tooltip = Props.tooltip(sk, 'desc')
+        self.desc = str(sk.getPropertyByName('desc', 0))
+        self.tooltip = sk.getDocumentationOfProperty('desc')
         self.thumbnail = lambda: sketch_thumbnail(sk)
