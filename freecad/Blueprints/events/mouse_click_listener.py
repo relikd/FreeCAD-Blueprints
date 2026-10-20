@@ -5,19 +5,13 @@ import FreeCADGui  # Selection
 from FreeCAD import Vector
 
 from ..gui.qt import QtCore
-from ..logic.sketcher import GeoId, GeoRef, PointPos
+from ..logic.sketcher.selection import UserSelection
 
-from typing import TYPE_CHECKING, Callable, NamedTuple
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from FreeCADGui import SelectionObject, View3DInventorPy
     from Sketcher import SketchObject as Sketch
-
-
-class UserSelection(NamedTuple):
-    ''' `vec` is `None` if clicked point was parallel to sketch plane. '''
-    vec: 'Vector|None'
-    geo: 'GeoRef|None'
 
 
 class MouseClickListener:
@@ -96,16 +90,13 @@ class MouseClickListener:
 
     def _selection(self, x: int, y: int) -> UserSelection:
         ''' Try to detect user selected geometry as best as possible. '''
-        selected = _current_sketcher_selection()
+        selected = UserSelection.get_current()
         # ideally return user-selected geometry (only if geometry was clicked)
         if selected.vec:
             return selected
         # if geometry selected without manual click (no `PickedPoints`),
-        # try to determine point by geometry itself (only for start/end pt)
-        if selected.geo and selected.geo.pos != PointPos.none:
-            vec = self.sketch.getPoint(selected.geo.geoid, selected.geo.pos)
-            if vec.x != 0 or vec.y != 0:
-                return UserSelection(vec, selected.geo)
+        if by_geo := selected.from_geometry(self.sketch):
+            return by_geo
         # if that fails, fallback to clicked coordinates
         if clicked_pt := self._screen_to_sketch(x, y):
             return UserSelection(clicked_pt, selected.geo)
@@ -125,50 +116,3 @@ def has_selection() -> bool:
     ''' Check if there is any geometry selected '''
     rv: list[SelectionObject] = FreeCADGui.Selection.getSelectionEx()
     return len(rv) == 1 and len(rv[0].SubElementNames) > 0
-
-
-def _current_sketcher_selection() -> UserSelection:
-    '''
-    Get currently selected Edge or Vertex.
-    Nothing else – in all other cases return `None`.
-    Assumes UI is already in Sketcher edit mode.
-    '''
-    selection: list[SelectionObject] = FreeCADGui.Selection.getSelectionEx()
-    if len(selection) != 1:
-        return UserSelection(None, None)
-
-    names = selection[0].SubElementNames
-    if len(names) != 1:
-        return UserSelection(None, None)
-
-    points = selection[0].PickedPoints
-    pt = points[0] if points else None
-    name = names[0]
-
-    if geoid := _name_to_geoid(name, 'Edge'):
-        return UserSelection(pt, GeoRef(geoid[0]))
-
-    if geoid := _name_to_geoid(name, 'ExternalEdge'):
-        return UserSelection(pt, GeoRef(GeoId.RefExt - geoid[0]))
-
-    if geoid := _name_to_geoid(name, 'Vertex'):
-        sketch: Sketch = selection[0].Object
-        g, p = sketch.getGeoVertexIndex(geoid[0])
-        return UserSelection(pt, GeoRef(g, p))  # type: ignore[arg-type]
-
-    if name == 'H_Axis':
-        return UserSelection(pt, GeoRef(GeoId.HAxis))
-    if name == 'V_Axis':
-        return UserSelection(pt, GeoRef(GeoId.VAxis))
-    if name == 'RootPoint':
-        return UserSelection(pt, GeoRef(GeoId.HAxis, PointPos.start))
-
-    return UserSelection(pt, None)
-
-
-def _name_to_geoid(name: str, prefix: str) -> 'tuple[int]|None':
-    ''' Helper to reduce boilerplate code. Tuple to allow walrus operator. '''
-    if name.startswith(prefix):
-        if num := name.removeprefix(prefix).strip():
-            return (int(num) - 1,)
-    return None
