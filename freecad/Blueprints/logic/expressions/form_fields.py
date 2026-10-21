@@ -47,9 +47,10 @@ class UserExprField:
         dst.addProperty(
             self.type_id, self.bind_key, group='_BlueprintsTransientProps',
             doc=self.meta_tooltip(),
-            attr=FreeCAD.PropertyType.Prop_Transient,  # type: ignore[attr-defined]
+            attr=FreeCAD.PropertyType.Prop_Transient,
             hidden=True)
-        FreeCADGui.ExpressionBinding(self.field).bind(dst, self.bind_key)  # type: ignore
+        # TODO: remove ignore one types include ExpressionBinding
+        FreeCADGui.ExpressionBinding(self.field).bind(dst, self.bind_key)  # type: ignore[attr-defined]
 
     def cleanup(self, dst: 'Sketch') -> None:
         ''' Remove all transient properties from sketch. '''

@@ -10,7 +10,7 @@ from typing import Final
 def isSketcher() -> bool:
     # `FreeCADGui.activeWorkbench().name()` cannot be used here, see above
     active = FreeCADGui.activeWorkbench()
-    for name, handler in FreeCADGui.listWorkbenches().items():  # type: ignore[attr-defined]
+    for name, handler in FreeCADGui.listWorkbenches().items():
         if handler is active:
             return name == 'SketcherWorkbench'
     return False

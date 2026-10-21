@@ -1,7 +1,7 @@
 from pathlib import Path
 from ..qt import QtCore, QtWidgets
 
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     QIndex = QtCore.QModelIndex | QtCore.QPersistentModelIndex
@@ -64,8 +64,6 @@ class TreeView(QtWidgets.QTreeView):
 #################################################
 
 class FileFilter(QtCore.QSortFilterProxyModel):
-    EXT: Final = '.FCStd'.lower()
-
     def __init__(self, source: QtWidgets.QFileSystemModel, parent: TreeView) \
             -> None:
         super().__init__(parent)
@@ -101,5 +99,5 @@ class FileFilter(QtCore.QSortFilterProxyModel):
             # or else the index invalidation sets root to "/"
             return True
 
-        return path.suffix.lower() == self.EXT \
+        return path.suffix.lower() == '.fcstd' \
             and self._query in path.with_suffix('').name.casefold()

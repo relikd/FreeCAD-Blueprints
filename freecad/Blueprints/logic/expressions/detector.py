@@ -29,7 +29,7 @@ class DetectedExpr:
 def detect_external(src: 'Sketch') -> list[DetectedExpr]:
     '''Detect if expression engine uses any external references like VarSet.'''
     # find actually used references
-    used = detect_vars('|'.join(x for _, x in src.ExpressionEngine))
+    used = detect_vars('|'.join(x for _, x in src.ExpressionEngine if x))
 
     # find potentially referencable props
     v_ignore, s_ignore = default_props('App::VarSet', 'Sketcher::SketchObject')

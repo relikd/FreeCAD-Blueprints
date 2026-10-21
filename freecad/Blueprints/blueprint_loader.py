@@ -39,7 +39,7 @@ def _loadSketchAtPath(path: str, prev_doc: 'Document|None') -> 'Sketch|None':
         return None
     # may raise exception and quit
     # hide in open documents tab-bar (hidden) and in model tree (temporary)
-    doc = FreeCAD.openDocument(path, hidden=True, temporary=True)  # type: ignore[call-arg]
+    doc = FreeCAD.openDocument(path, hidden=True, temporary=True)
     # revert focus to original document (prevents a nasty crash in Sketcher)
     FreeCAD.setActiveDocument(curDocName)
     if sk := _loadSketchFromDoc(doc):
@@ -52,7 +52,7 @@ def _loadSketchAtPath(path: str, prev_doc: 'Document|None') -> 'Sketch|None':
 
 def _loadSketchFromDoc(doc: 'Document') -> 'Sketch|None':
     ''' Filter document by Sketch-type and ask user which one to load. '''
-    sks: list[Sketch] = [x for x in doc.Objects
+    sks: list[Sketch] = [x for x in doc.Objects  # type: ignore[misc]
                          if x.isDerivedFrom('Sketcher::SketchObject')]
     if not sks:
         return None  # document does not contain any sketches
@@ -86,9 +86,9 @@ def reloadSketch(sketch: 'Sketch', *, hidden: bool = True) -> 'Sketch':
     # TODO: replace with `doc.restore()` once #33181 is fixed
     FreeCAD.closeDocument(sketch.Document.Name)
     if hidden:
-        doc = FreeCAD.openDocument(path, hidden=True, temporary=True)  # type: ignore[call-arg]
+        doc = FreeCAD.openDocument(path, hidden=True, temporary=True)
         if activeDoc:
             FreeCAD.setActiveDocument(activeDoc.Name)  # restore Focus
     else:
         doc = FreeCAD.openDocument(path)  # keep focus on new document
-    return doc.getObject(sketch_id)
+    return doc.getObject(sketch_id)  # type: ignore[return-value]

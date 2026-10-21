@@ -6,13 +6,13 @@ from ..gui.qt import QtCore, Icon
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from FreeCADGui import View3DInventorPy
+    from FreeCADGui import _View3DInventor
     from ..gui.qt import QtWidgets
 
 
 class MouseCursorListener(QtCore.QObject):
     ''' Temporarily change mouse cursor to blueprint insert mode. '''
-    def __init__(self, view: 'View3DInventorPy') -> None:
+    def __init__(self, view: '_View3DInventor') -> None:
         super().__init__()
         _DelayedCursorReset.clear()
         self.view: QtWidgets.QGraphicsView = view.graphicsView()

@@ -77,5 +77,4 @@ class Settings:
 
 def _cfg(name: str = 'Mod/Blueprints') -> 'ParameterGrp':
     import FreeCAD  # noqa: PLC0415
-    return FreeCAD.ParamGet(  # type: ignore[return-value]
-        'User parameter:BaseApp/Preferences/' + name)
+    return FreeCAD.ParamGet('User parameter:BaseApp/Preferences/' + name)

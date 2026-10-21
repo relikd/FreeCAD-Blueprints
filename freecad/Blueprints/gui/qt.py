@@ -235,4 +235,4 @@ def FCWidget(name: str) -> QtWidgets.QWidget: ...
 def FCWidget(name: str) -> 'QtWidgets.QWidget':
     ''' Load FreeCAD internal widget. '''
     import FreeCADGui  # noqa: PLC0415
-    return FreeCADGui.UiLoader().createWidget(name)  # type: ignore[attr-defined]
+    return FreeCADGui.UiLoader().createWidget(name)  # type: ignore[return-value]

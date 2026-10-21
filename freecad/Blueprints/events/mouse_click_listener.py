@@ -10,7 +10,7 @@ from ..logic.sketcher.selection import UserSelection
 from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
-    from FreeCADGui import SelectionObject, View3DInventorPy
+    from FreeCADGui import SelectionObject, _View3DInventor, _View3DEventInfo
     from Sketcher import SketchObject as Sketch
 
 
@@ -18,7 +18,7 @@ class MouseClickListener:
     ''' Monitor mouse clicks and report selected geometry in `on_click`. '''
     def __init__(
         self,
-        view: 'View3DInventorPy',
+        view: '_View3DInventor',
         sketch: 'Sketch',
         on_click: Callable[[UserSelection], None],
     ):
@@ -39,7 +39,7 @@ class MouseClickListener:
         del self.sketch
         del self.view
 
-    def on_mouse_event(self, info: dict) -> None:
+    def on_mouse_event(self, info: '_View3DEventInfo') -> None:
         if info.get('Button') != 'BUTTON1':
             return
         pos = info.get('Position')

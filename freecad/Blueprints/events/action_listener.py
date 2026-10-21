@@ -57,4 +57,4 @@ def available_actions() -> list[QtGui.QAction]:
 
 
 def available_commands() -> list[str]:
-    return FreeCADGui.listCommands()  # type: ignore[attr-defined]
+    return FreeCADGui.listCommands()

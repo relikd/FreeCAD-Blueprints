@@ -151,7 +151,7 @@ def _createArtificialAxis(
 
     def fn(geo: 'Geometry') -> int:
         # all are created as construction geometry ("True")
-        return sketch.addGeometry(moveTo(toPos, geo), True)  # type: ignore[return-value]
+        return sketch.addGeometry(moveTo(toPos, geo), True)
 
     if not axis.h and not axis.v:
         return ArtificialAxis(GeoId.VAxis, GeoId.HAxis, fn(Draw.point(0, 0)))
@@ -318,6 +318,8 @@ def _copy_expressions(
 ) -> None:
     ''' Duplicate expressions. Indices shifted according to `IdShifter`. '''
     for field, expr_str in src.ExpressionEngine:
+        if expr_str is None:
+            continue
         if field.startswith(('Constraints[', '.Constraints.')):
             new_name = shiftr.reindex(field)
             # first reindex, then replace external expressions

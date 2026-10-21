@@ -83,12 +83,13 @@ class SketcherTool(QtWidgets.QWidget):
 def task_tool_container() -> 'QtWidgets.QWidget|None':
     ''' Widget of side-panel where all the Sketcher task tools are. '''
     mw = FreeCADGui.getMainWindow()
-    dock: QtWidgets.QDockWidget = mw.findChild(QtWidgets.QWidget, 'Tasks')
-    # Note: the dock contains a QWidget with the same name
-    # the tools are nested within both, so this is future proof
-    for child in dock.findChildren(QtWidgets.QWidget):
-        if child.metaObject().className() == 'SketcherGui::TaskSketcherTool':
-            return child
+    # dock: QtWidgets.QDockWidget
+    if dock := mw.findChild(QtWidgets.QWidget, 'Tasks'):
+        # Note: the dock contains a QWidget with the same name
+        # the tools are nested within both, so this is future proof
+        for ch in dock.findChildren(QtWidgets.QWidget):
+            if ch.metaObject().className() == 'SketcherGui::TaskSketcherTool':
+                return ch
     return None
 
 

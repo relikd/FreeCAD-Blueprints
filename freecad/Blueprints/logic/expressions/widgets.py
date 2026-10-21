@@ -62,7 +62,7 @@ def property_to_widget(obj: 'DocObj', prop: str) -> QtWidgets.QWidget:
 
     elif type_id == 'App::PropertyEnumeration':
         w = QtWidgets.QComboBox()
-        w.addItems(obj.getEnumerationsOfProperty(prop))
+        w.addItems(obj.getEnumerationsOfProperty(prop) or [])
         w.setSizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         w.setMinimumContentsLength(20)
         idx = w.findText(getattr(obj, prop))

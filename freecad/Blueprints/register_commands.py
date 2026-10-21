@@ -60,7 +60,7 @@ def getActiveSketchInEditMode() -> 'Sketch|None':
         return None
     if not isinstance(edit, FreeCADGui.ViewProviderDocumentObject):
         return None
-    return edit.Object
+    return edit.Object  # type: ignore[return-value]
 
 
 CMD_NAME: Final = 'Blueprints_Add'
