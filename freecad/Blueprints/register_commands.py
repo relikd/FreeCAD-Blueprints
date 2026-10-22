@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 # see https://github.com/FreeCAD/FreeCAD/blob/f873b82f1e48632394609103e0b9071d83e46abf/src/Gui/Command.cpp#L1409
-class Blueprints_Add_Cmd:
+class Blueprints_Add:
     # def OnActionInit(self): ...
 
     def GetResources(self) -> dict[str, str]:
@@ -64,14 +64,14 @@ def getActiveSketchInEditMode() -> 'Sketch|None':
 
 
 CMD_NAME: Final = 'Blueprints_Add'
-FreeCADGui.addCommand(CMD_NAME, Blueprints_Add_Cmd())
+FreeCADGui.addCommand(CMD_NAME, Blueprints_Add())
 
 
 ##################################################
 # Sketcher main menu, "Blueprints" submenu entry
 ##################################################
 
-class Blueprints_Open_Library:
+class Blueprints_OpenLibrary:
     def GetResources(self) -> dict[str, str]:
         return {
             'MenuText': 'Open Blueprints Library',
@@ -86,7 +86,7 @@ class Blueprints_Open_Library:
         open_in_file_manager(Settings.databaseDir())
 
 
-FreeCADGui.addCommand('Blueprints_Open_Library', Blueprints_Open_Library())
+FreeCADGui.addCommand('Blueprints_OpenLibrary', Blueprints_OpenLibrary())
 
 
 class Blueprints_NewEmpty:
@@ -126,7 +126,7 @@ FreeCADGui.addCommand(
     'Blueprints_NewFromSelection', Blueprints_NewFromSelection())
 
 
-class BlueprintsMenu:
+class Blueprints_Menu:
     def GetResources(self) -> dict[str, str]:
         return {
             'MenuText': 'Blueprints',
@@ -136,11 +136,11 @@ class BlueprintsMenu:
     def GetCommands(self) -> list[str]:
         return [
             'Blueprints_Add',
-            'Blueprints_Open_Library',
+            'Blueprints_OpenLibrary',
             'Blueprints_NewEmpty',
             'Blueprints_NewFromSelection',
         ]
 
 
 MENU_NAME: Final = 'Blueprints_Menu'
-FreeCADGui.addCommand(MENU_NAME, BlueprintsMenu())
+FreeCADGui.addCommand(MENU_NAME, Blueprints_Menu())
