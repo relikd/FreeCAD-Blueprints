@@ -89,6 +89,43 @@ class Blueprints_Open_Library:
 FreeCADGui.addCommand('Blueprints_Open_Library', Blueprints_Open_Library())
 
 
+class Blueprints_NewEmpty:
+    def GetResources(self) -> dict[str, str]:
+        return {
+            'MenuText': 'New Empty Blueprint',
+            'ToolTip': 'Create a new, blank blueprint.',
+            'CmdType': 'ForEdit AlterDoc AlterSelection',
+        }
+
+    def Activated(self) -> None:
+        from .blueprint_creator import create_blueprint  # noqa: PLC0415
+        create_blueprint()
+
+
+FreeCADGui.addCommand('Blueprints_NewEmpty', Blueprints_NewEmpty())
+
+
+class Blueprints_NewFromSelection:
+    def GetResources(self) -> dict[str, str]:
+        return {
+            'MenuText': 'New Blueprint From Selection',
+            'ToolTip': 'Create blueprint from currently selected geometries.',
+            'CmdType': 'ForEdit AlterDoc AlterSelection',
+        }
+
+    def IsActive(self) -> bool:
+        from .blueprint_creator import has_selection  # noqa: PLC0415
+        return has_selection()
+
+    def Activated(self) -> None:
+        from .blueprint_creator import create_blueprint  # noqa: PLC0415
+        create_blueprint(from_selection=True)
+
+
+FreeCADGui.addCommand(
+    'Blueprints_NewFromSelection', Blueprints_NewFromSelection())
+
+
 class BlueprintsMenu:
     def GetResources(self) -> dict[str, str]:
         return {
@@ -97,7 +134,12 @@ class BlueprintsMenu:
         }
 
     def GetCommands(self) -> list[str]:
-        return ['Blueprints_Add', 'Blueprints_Open_Library']
+        return [
+            'Blueprints_Add',
+            'Blueprints_Open_Library',
+            'Blueprints_NewEmpty',
+            'Blueprints_NewFromSelection',
+        ]
 
 
 MENU_NAME: Final = 'Blueprints_Menu'

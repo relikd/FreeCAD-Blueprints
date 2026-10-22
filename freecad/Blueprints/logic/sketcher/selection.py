@@ -5,6 +5,7 @@ from .georef import GeoId, GeoRef, PointPos
 from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from FreeCAD import Vector
     from Sketcher import SketchObject as Sketch
 
@@ -41,6 +42,22 @@ class UserSelection(NamedTuple):
             if vec.x != 0 or vec.y != 0:
                 return UserSelection(vec, self.geo)
         return None
+
+    @staticmethod
+    def geometries() -> 'Iterator[GeoSelection]':
+        ''' Returns filtered geometry (Edge + Vertex) of current selection. '''
+        for sel in FreeCADGui.Selection.getSelectionEx()[:1]:
+            sketch: Sketch = sel.Object
+            if sketch.isDerivedFrom('Sketcher::SketchObject'):
+                for name in sel.SubElementNames:
+                    if name.startswith(('Edge', 'Vertex', 'ExternalEdge')):
+                        if ref := getIdsFromName(name, sketch):
+                            yield GeoSelection(sketch, ref)
+
+
+class GeoSelection(NamedTuple):
+    sketch: 'Sketch'
+    geo: 'GeoRef'
 
 
 # see https://github.com/FreeCAD/FreeCAD/blob/d3f4da791daa9e94f340b81770d13f090ec679c6/src/Mod/Sketcher/Gui/Utils.cpp#L223-L242

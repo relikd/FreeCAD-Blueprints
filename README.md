@@ -45,9 +45,9 @@ If the file contains multiple sketches, a popup will ask you which sketch to loa
 	- [ ] check if there are other expressions than in-sketch refs
 	- [x] thumbnail preview of the sketch prior to import
 	- [x] multi-copy equals constraint (change all copies with a single value)
-- [ ] Allow user to (easily) create new blueprints
-	- [ ] shortcut to create new document in user-collection
-	- [ ] create empty sketch via `Part` (avoids a body object)
+- [x] Allow user to (easily) create new blueprints
+	- [x] shortcut to create new document in user-collection
+	- [x] create empty sketch via `Part` (avoids a body object)
 	- [ ] usage instructions (`desc` property, fully constrain to origin, ...)
 - [x] Preferences page
 	- [x] manage location of user-collection
