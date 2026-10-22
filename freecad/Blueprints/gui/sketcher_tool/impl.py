@@ -60,7 +60,7 @@ class BlueprintSketcherTool(SketcherTool):
         equal_named.setIcon(Icon.res('tool-equal-named.svg'))
         self.equal_named = equal_named
 
-        hide_unnamed = QtWidgets.QCheckBox('Hide unnamed constraints')
+        hide_unnamed = QtWidgets.QCheckBox('Hide unnamed constraints (U)')
         hide_unnamed.setToolTip('Only show named constraints in Sketcher')
         hide_unnamed.setIcon(Icon.freecad('TreeItemInvisible.svg'))
         self.hide_unnamed = hide_unnamed
@@ -86,6 +86,8 @@ class BlueprintSketcherTool(SketcherTool):
             self.rotation.toggle()
         elif letter == 'J':
             self.equal_named.toggle()
+        elif letter == 'U':
+            self.hide_unnamed.toggle()
         else:
             return False
         return True
