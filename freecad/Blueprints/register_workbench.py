@@ -48,4 +48,13 @@ class PseudoWorkbench:
             ]
         return []
 
-    # def modifyContextMenu(self) -> list[dict[str, str]]:
+    def modifyContextMenu(self, recipient: str) -> list[dict[str, str]]:
+        # see https://github.com/FreeCAD/FreeCAD/blob/9946038aace97af288eb28f2727a169f9d1158c7/src/Mod/Sketcher/Gui/ViewProviderSketch.cpp#L5582-L5601
+        if recipient == 'Sketch':
+            from .register_commands import MENU_NAME  # noqa: PLC0415
+            insert_point = 'Sketcher_CompConstrainTools'
+            return [  # in reverse order because each is inserted after manu
+                {'insert': MENU_NAME, 'after': '', 'menuItem': insert_point},
+                {'insert': 'Separator', 'after': '', 'menuItem': insert_point},
+            ]
+        return []
