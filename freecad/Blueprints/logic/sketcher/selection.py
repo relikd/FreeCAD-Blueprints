@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
     from FreeCAD import Vector
-    from FreeCADGui import SelectionObject
     from Sketcher import SketchObject as Sketch
 
 
@@ -22,7 +21,7 @@ class UserSelection(NamedTuple):
         In all other cases return `None`.
         Assumes UI is already in Sketcher edit mode.
         '''
-        sel: list[SelectionObject] = FreeCADGui.Selection.getSelectionEx()
+        sel = FreeCADGui.Selection.getSelectionEx()
         if len(sel) != 1:
             return UserSelection(None, None)
 
@@ -32,27 +31,8 @@ class UserSelection(NamedTuple):
 
         points = sel[0].PickedPoints
         pt = points[0] if points else None
-        name = names[0]
 
-        if geoid := _name_to_geoid(name, 'Edge'):
-            return UserSelection(pt, GeoRef(geoid[0]))
-
-        if geoid := _name_to_geoid(name, 'ExternalEdge'):
-            return UserSelection(pt, GeoRef(GeoId.RefExt - geoid[0]))
-
-        if geoid := _name_to_geoid(name, 'Vertex'):
-            sketch: Sketch = sel[0].Object
-            g, p = sketch.getGeoVertexIndex(geoid[0])
-            return UserSelection(pt, GeoRef(g, p))  # type: ignore[arg-type]
-
-        if name == 'H_Axis':
-            return UserSelection(pt, GeoRef(GeoId.HAxis))
-        if name == 'V_Axis':
-            return UserSelection(pt, GeoRef(GeoId.VAxis))
-        if name == 'RootPoint':
-            return UserSelection(pt, GeoRef(GeoId.HAxis, PointPos.start))
-
-        return UserSelection(pt, None)
+        return UserSelection(pt, getIdsFromName(names[0], sel[0].Object))
 
     def from_geometry(self, sketch: 'Sketch') -> 'UserSelection|None':
         ''' Try to determine point by geometry itself (only for start/end). '''
@@ -63,9 +43,25 @@ class UserSelection(NamedTuple):
         return None
 
 
-def _name_to_geoid(name: str, prefix: str) -> 'tuple[int]|None':
-    ''' Helper to reduce boilerplate code. Tuple to allow walrus operator. '''
-    if name.startswith(prefix):
-        if num := name.removeprefix(prefix).strip():
-            return (int(num) - 1,)
+# see https://github.com/FreeCAD/FreeCAD/blob/d3f4da791daa9e94f340b81770d13f090ec679c6/src/Mod/Sketcher/Gui/Utils.cpp#L223-L242
+def getIdsFromName(name: str, sketch: 'Sketch') -> 'GeoRef|None':
+    if name.startswith('Edge'):
+        return GeoRef(int(name[4:]) - 1)
+
+    if name == 'RootPoint':
+        return GeoRef(GeoId.RtPnt, PointPos.start)
+
+    if name == 'H_Axis':
+        return GeoRef(GeoId.HAxis)
+
+    if name == 'V_Axis':
+        return GeoRef(GeoId.VAxis)
+
+    if name.startswith('ExternalEdge'):
+        return GeoRef(GeoId.RefExt + 1 - int(name[12:]))
+
+    if name.startswith('Vertex'):
+        g, p = sketch.getGeoVertexIndex(int(name[6:]) - 1)
+        return GeoRef(g, p)  # type: ignore[arg-type]
+
     return None
