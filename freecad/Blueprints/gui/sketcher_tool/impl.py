@@ -21,7 +21,7 @@ class State:
 
 class BlueprintSketcherTool(SketcherTool):
     TITLE = 'Blueprint Parameters'
-    ICON = Icon.with_name('toolbar.svg')
+    ICON = Icon.res('toolbar.svg')
 
     def __init__(self, inserter: 'BlueprintInserter') -> None:
         super().__init__()
@@ -46,19 +46,23 @@ class BlueprintSketcherTool(SketcherTool):
         fileinfo.addWidget(file_combo, 1)  # use full width
 
         # insert options
-        rotation = QtWidgets.QCheckBox('Allow rotation (M)')
-        rotation.setToolTip('Remove Axes Alignment')
-        rotation.setIcon(Icon.with_name('tool-allow-rotate.svg'))
+        rotation = QtWidgets.QCheckBox('Remove Axes Alignment (M)')
+        rotation.setToolTip('Allow rotation of object after insert.')
+        rotation.setIcon(
+            Icon.freecad('tools/Sketcher_RemoveAxesAlignment.svg'))
+
         self.rotation = rotation
 
         equal_named = QtWidgets.QCheckBox('Equal named constraints (J)')
         equal_named.setToolTip(
             'Create equal-constraints (named constraints only)')
-        equal_named.setIcon(Icon.with_name('tool-equal-named.svg'))
+        # Icon.freecad('constraints/Constraint_EqualLength.svg'))
+        equal_named.setIcon(Icon.res('tool-equal-named.svg'))
         self.equal_named = equal_named
 
         hide_unnamed = QtWidgets.QCheckBox('Hide unnamed constraints')
         hide_unnamed.setToolTip('Only show named constraints in Sketcher')
+        hide_unnamed.setIcon(Icon.freecad('TreeItemInvisible.svg'))
         self.hide_unnamed = hide_unnamed
 
         form, self.expr_fields = make_form_fields(src, dst)

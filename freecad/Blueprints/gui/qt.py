@@ -18,8 +18,16 @@ else:
 
 class Icon:
     @staticmethod
-    def with_name(name: str) -> QtGui.QPixmap:
-        ''' Load icon and set device pixel ration 2. '''
+    def freecad(name: str) -> QtGui.QIcon:
+        '''
+        Icons already bundled with FreeCAD (`:/icons/<name>`).
+        See: https://github.com/search?q=repo:FreeCAD/FreeCAD+path:*.qrc
+        '''
+        return QtGui.QIcon(':/icons/' + name)
+
+    @staticmethod
+    def res(name: str) -> QtGui.QPixmap:
+        ''' Load addon provided icon and set device pixel ration to 2. '''
         rv = QtGui.QPixmap(RES_ROOT / 'icons' / name)
         rv.setDevicePixelRatio(2)
         return rv
@@ -27,7 +35,7 @@ class Icon:
     @staticmethod
     def blueprint_cursor() -> QtGui.QCursor:
         ''' Mouse cursor shown while inserting blueprint. '''
-        return QtGui.QCursor(Icon.with_name('cursor.svg'), 8, 8)
+        return QtGui.QCursor(Icon.res('cursor.svg'), 8, 8)
 
 
 class OpenFileLocationAction(QtGui.QAction):
