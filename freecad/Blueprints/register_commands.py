@@ -14,12 +14,12 @@ if TYPE_CHECKING:
 # IsActive is called often (incl. when the workbench loads).
 
 # see https://github.com/FreeCAD/FreeCAD/blob/f873b82f1e48632394609103e0b9071d83e46abf/src/Gui/Command.cpp#L1409
-class Blueprints_Add:
+class Blueprints_Insert:
     # def OnActionInit(self): ...
 
     def GetResources(self) -> dict[str, str]:
         return {
-            'MenuText': 'Add Blueprint (Sketch)',
+            'MenuText': 'Insert Blueprint',
             'ToolTip': 'Open blueprint library to add a Sketcher template.',
             'Pixmap': 'toolbar.svg',
             'Accel': 'B',
@@ -66,8 +66,8 @@ def getActiveSketchInEditMode() -> 'Sketch|None':
     return edit.Object  # type: ignore[return-value]
 
 
-CMD_NAME: Final = 'Blueprints_Add'
-FreeCADGui.addCommand(CMD_NAME, Blueprints_Add())
+CMD_NAME: Final = 'Blueprints_Insert'
+FreeCADGui.addCommand(CMD_NAME, Blueprints_Insert())
 
 
 ##################################################
@@ -148,7 +148,7 @@ class Blueprints_Menu:
 
     def GetCommands(self) -> list[str]:
         return [
-            'Blueprints_Add',
+            'Blueprints_Insert',
             'Blueprints_OpenLibrary',
             'Blueprints_NewEmpty',
             'Blueprints_NewFromSelection',
