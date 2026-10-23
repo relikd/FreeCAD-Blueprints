@@ -16,12 +16,6 @@ if TYPE_CHECKING:
     from .logic.sketcher.selection import GeoSelection
 
 
-def has_selection() -> bool:
-    ''' Returns `True` if at least one copyable geometry is selected. '''
-    # performance is key. This returns on the first found entry.
-    return any(UserSelection.geometries())
-
-
 def create_blueprint(*, from_selection: bool = False) -> None:
     '''
     Opens a popup to ask user for a document name (inside of user collection

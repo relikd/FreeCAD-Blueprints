@@ -10,6 +10,9 @@ if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
 
 
+# NOTE: Keep imports within `Activated` + remove imports from `IsActive`
+# IsActive is called often (incl. when the workbench loads).
+
 # see https://github.com/FreeCAD/FreeCAD/blob/f873b82f1e48632394609103e0b9071d83e46abf/src/Gui/Command.cpp#L1409
 class Blueprints_Add:
     # def OnActionInit(self): ...
@@ -114,12 +117,22 @@ class Blueprints_NewFromSelection:
         }
 
     def IsActive(self) -> bool:
-        from .blueprint_creator import has_selection  # noqa: PLC0415
-        return has_selection()
+        # performance is key. Dont import unnecessary classes
+        return has_geometry_selection()
 
     def Activated(self) -> None:
         from .blueprint_creator import create_blueprint  # noqa: PLC0415
         create_blueprint(from_selection=True)
+
+
+def has_geometry_selection() -> bool:
+    # keep in sync with `UserSelection.geometries()`
+    for sel in FreeCADGui.Selection.getSelectionEx()[:1]:
+        if sel.Object.isDerivedFrom('Sketcher::SketchObject'):
+            for name in sel.SubElementNames:
+                if name.startswith(('Edge', 'Vertex', 'ExternalEdge')):
+                    return True
+    return False
 
 
 FreeCADGui.addCommand(
