@@ -83,7 +83,6 @@ def reloadSketch(sketch: 'Sketch', *, hidden: bool = True) -> 'Sketch':
     activeDoc = FreeCAD.ActiveDocument
     sketch_id = sketch.ID
     path = sketch.Document.FileName
-    # TODO: replace with `doc.restore()` once #33181 is fixed
     FreeCAD.closeDocument(sketch.Document.Name)
     if hidden:
         doc = FreeCAD.openDocument(path, hidden=True, temporary=True)

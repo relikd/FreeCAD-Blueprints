@@ -12,6 +12,8 @@ from typing import Callable
 # but that isnt exposed to python
 # see https://github.com/FreeCAD/FreeCAD/blob/main/src/Mod/Sketcher/Gui/ViewProviderSketch.cpp
 
+# TODO: fix issue: ESC in settings will abort / quit blueprint inserter
+
 class EscListener(QtCore.QObject):
     '''
     Intercept ESC key and forward to `on_esc` callback.
