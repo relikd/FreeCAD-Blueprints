@@ -33,10 +33,16 @@ def _loadSketchAtPath(path: str, prev_doc: 'Document|None') -> 'Sketch|None':
     If a sketch is returned, you are responsible for closing the document.
     e.g., `FreeCAD.closeDocument(sketch.Document.Name)`
     '''
-    curDocName = curDoc.Name if (curDoc := FreeCAD.ActiveDocument) else ''
-    if not curDocName:
-        Notify.warn('No active document', 'Cannot switch to active document.')
+    curDoc = FreeCAD.ActiveDocument
+    if not curDoc:
+        Notify.err('No active document', 'Cannot switch to active document.')
         return None
+    if path == curDoc.FileName:
+        Notify.err('Same document', 'The selected blueprint is the same file'
+                   ' as the currently open document.')
+        return None
+
+    curDocName = curDoc.Name
     # may raise exception and quit
     # hide in open documents tab-bar (hidden) and in model tree (temporary)
     doc = FreeCAD.openDocument(path, hidden=True, temporary=True)
