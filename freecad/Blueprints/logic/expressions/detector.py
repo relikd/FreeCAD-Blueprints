@@ -22,7 +22,9 @@ class DetectedExpr:
     def __post_init__(self) -> None:
         # The naming wont work with nested variables.
         # But we don't have support for these anyway.
-        self.display_name = camel_case_name(self.prop)
+        group_name = self.obj.getGroupOfProperty(self.prop)
+        self.display_name = camel_case_name(
+            self.prop.removeprefix(group_name + '_'))
         self.type_id = self.obj.getTypeIdOfProperty(self.prop)
 
 
