@@ -1,8 +1,7 @@
 '''
 Read back user-provided form fields and replace existing expressions.
 '''
-import re
-
+from ..detector.expressions import rx_var_xpath
 from .widgets import widget_to_value
 
 from typing import TYPE_CHECKING, NamedTuple
@@ -10,16 +9,6 @@ from typing import TYPE_CHECKING, NamedTuple
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
     from .form_fields import UserExprField
-
-
-_rx = re.compile(r'[\w_.<>]+')
-
-
-def detect_vars(expr: str) -> set[str]:
-    ''' Detect external expression references. '''
-    # excluding "name()" (command calls)
-    expr += ' '  # make sure there is an end char for `!= '('`
-    return {x.group() for x in _rx.finditer(expr) if expr[x.end()] != '('}
 
 
 class Val(NamedTuple):
@@ -48,7 +37,7 @@ class ExprReplacer(dict[str, Val]):
             return False, expr
         if fullmatch := self.get(expr):
             return not fullmatch.is_expr, fullmatch.value
-        return False, _rx.sub(lambda x, with_end=expr + ' ':
+        return False, rx_var_xpath.sub(lambda x, with_end=expr + ' ':
             repl.value if (repl := self.get(x.group())) is not None
             and with_end[x.end()] != '(' else x.group(),
             expr)

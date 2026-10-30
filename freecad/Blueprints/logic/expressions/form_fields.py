@@ -7,14 +7,13 @@ import FreeCAD
 import FreeCADGui
 
 from ...gui.qt import QtWidgets
-from .detector import detect_external
 from .widgets import property_to_widget
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
-    from .detector import DetectedExpr
+    from ..detector.expressions import DetectedExpr
 
 
 PRFX = '__ext_expr_'
@@ -65,12 +64,12 @@ class UserExprField:
         dst.removeProperty(self.bind_key)  # does not need to exist
 
 
-def make_form_fields(src: 'Sketch', dst: 'Sketch') \
+def make_form_fields(detected_expr: 'list[DetectedExpr]', dst: 'Sketch') \
         -> tuple[QtWidgets.QFormLayout, list[UserExprField]]:
     ''' Create form fields and internal field mapping. '''
     rv = []
     form = QtWidgets.QFormLayout()
-    for i, expref in enumerate(detect_external(src), _prev_idx(dst) + 1):
+    for i, expref in enumerate(detected_expr, _prev_idx(dst) + 1):
         item = UserExprField(expref, i)
         rv.append(item)
         # label

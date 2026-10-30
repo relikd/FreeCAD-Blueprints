@@ -5,6 +5,7 @@ import re
 from dataclasses import dataclass
 
 from .helper.notify import Notify
+from .logic.detector.axis import detect_axis, ReferencedAxis
 from .logic.sketcher.constraints import Constr
 from .logic.sketcher.geodraw import Draw, moveTo
 from .logic.sketcher.georef import GeoId, GeoRef, PointPos
@@ -63,7 +64,7 @@ class BlueprintDuplicator:
 
         # check if sketch contains references on any of the axes
         # override original axis (if necessary) to allow translation
-        axis = _createArtificialAxis(dst, self.placement, _axisUsage(src))
+        axis = _createArtificialAxis(dst, self.placement, detect_axis(src))
 
         # after (potential) artificial axis but before copying geometry!
         shifter = IdShifter(dst, axis, self.namedEquals)
@@ -96,37 +97,6 @@ class BlueprintDuplicator:
 
         if axis and self.constrainTo:
             _constrain_origin(dst, GeoRef.S(axis.origin), self.constrainTo)
-
-
-#################################################
-# Axis detection
-#################################################
-
-class ReferencedAxis(NamedTuple):
-    v: bool
-    h: bool
-    origin: bool
-
-
-def _axisUsage(sketch: 'Sketch') -> ReferencedAxis:
-    ''' Check whether sketch references `(VAxis, HAxis, RtPnt)`. '''
-    v, h, origin = False, False, False
-    for con in sketch.Constraints:
-        for geo, pos in (
-            (con.First, con.FirstPos),
-            (con.Second, con.SecondPos),
-            (con.Third, con.ThirdPos),
-        ):
-            if geo == GeoId.VAxis:
-                v = True
-            elif geo == GeoId.HAxis:
-                if pos == PointPos.start:
-                    origin = True
-                else:
-                    h = True
-        if v and h:  # origin not relevant. h is used as origin
-            return ReferencedAxis(True, True, True)  # break early
-    return ReferencedAxis(v, h, origin)
 
 
 #################################################

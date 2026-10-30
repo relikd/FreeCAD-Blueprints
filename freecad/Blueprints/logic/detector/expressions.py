@@ -1,16 +1,27 @@
 '''
 Detect expressions on external objects (VarSet or Sketch property)
 '''
+import re
 from dataclasses import dataclass
 
 from ...helper.utils import default_props, camel_case_name
-from .replacer import detect_vars
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from FreeCAD import DocumentObject as DocObj
     from Sketcher import SketchObject as Sketch
+
+
+rx_var_xpath = re.compile(r'[\w_.<>]+')
+
+
+def detect_vars(expr: str) -> set[str]:
+    ''' Detect external expression references. '''
+    # excluding "name()" (command calls)
+    expr += ' '  # make sure there is an end char for `!= '('`
+    return {x.group() for x in rx_var_xpath.finditer(expr)
+            if expr[x.end()] != '('}
 
 
 @dataclass
