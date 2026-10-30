@@ -54,7 +54,7 @@ class ListView(QtWidgets.QListView):
 
     def get_selected(self) -> 'DataItem|None':
         ''' Return data entry of currently selected row. '''
-        return self.currentIndex().data(QtCore.Qt.ItemDataRole.UserRole)
+        return self.currentIndex().data(QtCore.Qt.ItemDataRole.UserRole)  # type: ignore[no-any-return]
 
 
 #################################################

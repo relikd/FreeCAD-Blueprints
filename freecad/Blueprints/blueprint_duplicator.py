@@ -279,7 +279,7 @@ class IdShifter:
             # first copy is only renamed
             if new_name := self.name_to_name.get(name):
                 return '.Constraints.' + new_name
-        return match.group(0)  # fallback to original string
+        return match.group(0)  # type: ignore[no-any-return]  # fallback to original string
 
 
 rx_expr = re.compile(r'Constraints\[([0-9]+)\]|\.Constraints\.([a-zA-Z_]\w*)')

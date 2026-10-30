@@ -15,7 +15,7 @@ class SketcherTool(QtWidgets.QWidget):
     TITLE: str
     ICON: 'QtGui.QIcon|QtGui.QPixmap'
 
-    def __init__(self):
+    def __init__(self) -> None:
         '''
         Raises:
         QtElementNotFound: If `TaskSketcherTool` widget cannot be located.

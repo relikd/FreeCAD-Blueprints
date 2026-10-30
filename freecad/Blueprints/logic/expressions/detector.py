@@ -19,7 +19,7 @@ class DetectedExpr:
     key: str  # string as used by the expression engine
     prop: str  # property name (removed "VarSet." and "." prefix)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # The naming wont work with nested variables.
         # But we don't have support for these anyway.
         self.display_name = camel_case_name(self.prop)
