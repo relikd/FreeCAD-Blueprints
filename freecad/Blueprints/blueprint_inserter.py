@@ -98,6 +98,7 @@ class BlueprintInserter:
             new_sketch = reloadSketch(self.blueprint, hidden=False)
             if doc := FreeCADGui.ActiveDocument:
                 doc.setEdit(new_sketch)
+                FreeCADGui.runCommand('Std_ViewFitAll')
         elif not keepOpen:
             FreeCAD.closeDocument(self.blueprint.Document.Name)
         del self.blueprint
