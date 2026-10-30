@@ -247,10 +247,10 @@ class IdShifter:
                     return new_name
         return name
 
-    def shift_name(self, index: int, name: str) -> str:
+    def shift_name(self, index: int, name: str, *, is_driving: bool) -> str:
         ''' Auto-increment constraint name and update `prev_state`. '''
         if name:
-            if self.is_first_copy:
+            if self.is_first_copy or not is_driving:
                 new_name = self._next_name(name)
                 self.named_equals[name] = new_name
                 return new_name
@@ -307,7 +307,7 @@ def _copy_constraints(src: 'Sketch', dst: 'Sketch', shiftr: IdShifter) -> None:
         if con.Third != GeoId.Undef:
             con.Third = shiftr.shift_index(con.Third, con.ThirdPos)
         if con.Name:
-            con.Name = shiftr.shift_name(i, con.Name)
+            con.Name = shiftr.shift_name(i, con.Name, is_driving=con.Driving)
         con_list.append(con)
     dst.addConstraint(con_list)
     # dst.solve()  # no need, done at the end
