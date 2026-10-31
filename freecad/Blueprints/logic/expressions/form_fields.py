@@ -48,7 +48,7 @@ class UserExprField:
             doc=self.meta_tooltip(),
             attr=FreeCAD.PropertyType.Prop_Transient,
             hidden=True)
-        # TODO: remove ignore one types include ExpressionBinding
+        # TODO: remove ignore once types include ExpressionBinding
         FreeCADGui.ExpressionBinding(self.field).bind(dst, self.bind_key)  # type: ignore[attr-defined]
 
     def cleanup(self, dst: 'Sketch') -> None:

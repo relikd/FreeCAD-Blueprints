@@ -5,7 +5,6 @@ import re
 from dataclasses import dataclass
 
 from .helper.notify import Notify
-from .logic.detector.axis import detect_axis, ReferencedAxis
 from .logic.sketcher.constraints import Constr
 from .logic.sketcher.geodraw import Draw, moveTo
 from .logic.sketcher.georef import GeoId, GeoRef, PointPos
@@ -17,14 +16,8 @@ if TYPE_CHECKING:
     from FreeCAD import Vector
     from Part import Geometry
     from .logic.expressions import ExprReplacer
+    from .logic.detector import DetectedStats, ReferencedAxis
     NamedEquals = dict[str, str]
-
-
-def _validate(sketch: 'Sketch') -> None:
-    ''' Ensure sketch is well-structured to avoid common mistakes. '''
-    if Constr.any(sketch.Constraints, GeoId.isExt):
-        Notify.warn('External reference found',
-                    'Blueprints cannot have references on external geometry.')
 
 
 @dataclass
@@ -53,18 +46,17 @@ class BlueprintDuplicator:
     hideUnnamed: bool
     namedEquals: 'NamedEquals'  # use empty dict to ignore
     externalExpressions: 'ExprReplacer'
+    detected: 'DetectedStats'
 
     def copyTo(self, dst: 'Sketch', *, src: 'Sketch') -> None:
         ''' Copy a sketch from one document to another. '''
-        _validate(src)
-
         # where newly created geo ids start
         # used to group everything which was created by this process
         geoid_0, cid_0 = dst.GeometryCount, dst.ConstraintCount
 
         # check if sketch contains references on any of the axes
         # override original axis (if necessary) to allow translation
-        axis = _createArtificialAxis(dst, self.placement, detect_axis(src))
+        axis = _createArtificialAxis(dst, self.placement, self.detected.axis)
 
         # after (potential) artificial axis but before copying geometry!
         shifter = IdShifter(dst, axis, self.namedEquals)
@@ -110,7 +102,7 @@ class ArtificialAxis(NamedTuple):
 
 
 def _createArtificialAxis(
-    sketch: 'Sketch', toPos: 'Vector|None', axis: ReferencedAxis,
+    sketch: 'Sketch', toPos: 'Vector|None', axis: 'ReferencedAxis',
 ) -> 'ArtificialAxis|None':
     '''
     Create artificial axis to allow translation.

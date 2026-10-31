@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from ...logic.detector.expressions import detect_external
 from ...logic.expressions import make_form_fields, ExprReplacer
 from ..qt import QtWidgets, Icon, ElidedButton, OpenFileLocationAction
 from .base import SketcherTool
@@ -66,7 +65,7 @@ class BlueprintSketcherTool(SketcherTool):
         hide_unnamed.setIcon(Icon.freecad('TreeItemInvisible.svg'))
         self.hide_unnamed = hide_unnamed
 
-        form, self.expr_fields = make_form_fields(detect_external(src), dst)
+        form, self.expr_fields = make_form_fields(inserter.detected.expr, dst)
 
         layout = QtWidgets.QVBoxLayout(self)
         if form.rowCount() > 0:

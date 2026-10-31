@@ -11,6 +11,7 @@ from .events.hotkey_listener import HotkeyListener
 from .events.mouse_click_listener import MouseClickListener, UserSelection
 from .events.mouse_cursor_listener import MouseCursorListener
 from .gui.sketcher_tool import BlueprintSketcherTool
+from .logic.detector import DetectedStats
 from .blueprint_loader import reloadSketch
 
 from typing import TYPE_CHECKING
@@ -56,6 +57,7 @@ class BlueprintInserter:
         self.current = current
         self.blueprint = blueprint
         self.prev_state = {}
+        self.detected = DetectedStats(blueprint)
 
         # indicate insertion mode by showing cursor icon
         self.cursor_monitor = MouseCursorListener(view)
@@ -131,6 +133,7 @@ class BlueprintInserter:
             hideUnnamed=options.hide_unnamed,
             namedEquals=self.prev_state,
             externalExpressions=options.repl_expr,
+            detected=self.detected,
         )
         thisDoc = self.current.Document
         thisDoc.openTransaction('Insert Blueprint (Sketch)')
