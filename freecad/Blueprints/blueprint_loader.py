@@ -61,6 +61,7 @@ def _loadSketchFromDoc(doc: 'Document') -> 'Sketch|None':
     sks: list[Sketch] = [x for x in doc.Objects  # type: ignore[misc]
                          if x.isDerivedFrom('Sketcher::SketchObject')]
     if not sks:
+        Notify.info('No sketches found', 'File does not contain any sketches.')
         return None  # document does not contain any sketches
     if len(sks) == 1:
         return sks[0]  # if there is only one, load it right away
