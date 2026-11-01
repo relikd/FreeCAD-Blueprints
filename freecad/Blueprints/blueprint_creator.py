@@ -46,6 +46,7 @@ def create_sketch() -> 'Sketch|None':
     doc = FreeCAD.newDocument()
     doc.saveAs(path)
     sketch = doc.addObject('Sketcher::SketchObject', 'Sketch')
+    sketch.addProperty('App::PropertyString', 'desc')
     # bring to front and start Sketcher edit mode
     FreeCAD.setActiveDocument(doc.Name)
     if doc := FreeCADGui.ActiveDocument:
