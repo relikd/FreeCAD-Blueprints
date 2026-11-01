@@ -59,6 +59,9 @@ class BlueprintSketcherTool(SketcherTool):
         # Icon.freecad('constraints/Constraint_EqualLength.svg'))
         equal_named.setIcon(Icon.res('tool-equal-named.svg'))
         self.equal_named = equal_named
+        if not inserter.detected.constraints.has_named:
+            equal_named.setEnabled(False)
+            equal_named.setToolTip('No named constraints detected.')
 
         hide_unnamed = QtWidgets.QCheckBox('Hide unnamed constraints (U)')
         hide_unnamed.setToolTip('Only show named constraints in Sketcher')
