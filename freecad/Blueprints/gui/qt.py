@@ -37,6 +37,12 @@ class Icon:
         ''' Mouse cursor shown while inserting blueprint. '''
         return QtGui.QCursor(Icon.res('cursor.svg'), 8, 8)
 
+    @staticmethod
+    def folder() -> QtGui.QIcon:
+        ''' Shown in file browser. Regular folder / directory icon. '''
+        return QtWidgets.QApplication.style().standardIcon(
+            QtWidgets.QStyle.StandardPixmap.SP_DirIcon)
+
 
 class OpenFileLocationAction(QtGui.QAction):
     '''`path_fn` takes either static path or function returning path.'''

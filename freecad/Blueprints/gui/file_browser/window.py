@@ -36,13 +36,15 @@ class FileBrowser(QtWidgets.QDialog):
         layout.addWidget(buttons)
 
         # interconnections
-        search_bar.textChanged.connect(tree.filter.set_query)
+        search_bar.textChanged.connect(tree.apply_filter)
         search_bar.on_up_down.connect(self.on_up_down)
-        tree.doubleClicked.connect(self.accept)
+        tree.itemDoubleClicked.connect(self.accept)
         tree.validated.connect(self.accept_button.setEnabled)
         self.finished.connect(self.save_settings)
 
-        tree.apply_initial()
+        # apply initial expanded state + hide empty dirs
+        # triggers `on_selection_changed`, thus `self.accept_button` must exist
+        tree.apply_filter('')
 
     def save_settings(self, _: int) -> None:
         ''' Persist window size in settings. '''
