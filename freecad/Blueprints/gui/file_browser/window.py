@@ -38,7 +38,7 @@ class FileBrowser(QtWidgets.QDialog):
         # interconnections
         search_bar.textChanged.connect(tree.apply_filter)
         search_bar.on_up_down.connect(self.on_up_down)
-        tree.itemDoubleClicked.connect(self.accept)
+        tree.doubleClicked.connect(self.accept)
         tree.validated.connect(self.accept_button.setEnabled)
         self.finished.connect(self.save_settings)
 

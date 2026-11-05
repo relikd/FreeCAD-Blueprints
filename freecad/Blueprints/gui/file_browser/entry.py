@@ -1,42 +1,34 @@
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
-
-from ..qt import QtCore, QtWidgets, Icon
 
 
 @dataclass
 class Node:
     path: Path
+    parent: 'Node|None' = field(repr=False)
     expanded: bool = True  # by default: expanded
 
-    @cached_property
-    def widget(self) -> 'QtWidgets.QTreeWidgetItem':
-        ''' Widget used by tree. Data contains self-reference on Node. '''
-        rv = QtWidgets.QTreeWidgetItem([self.path.name.removesuffix('.FCStd')])
-        rv.setData(0, QtCore.Qt.ItemDataRole.UserRole, self)
+    def __post_init__(self) -> None:
         if self.path.is_dir():
-            rv.setIcon(0, Icon.folder())
+            self.name = self.path.name
         else:
-            rv.setIcon(0, Icon.freecad('freecad.svg'))
-        # rv.setExpanded(self.expanded)  # not applied unless rendered first
-        return rv
+            self.name = self.path.name[:-6]  # remove suffix (case insensitive)
 
     @cached_property
     def children(self) -> list['Node']:
+        if not self.path.is_dir():
+            return []
         dirs = []
         files = []
         for child in self.path.iterdir():
             if child.name.startswith('.'):
                 continue  # dont descend into ".git" dir (and hidden files)
             if child.is_dir():
-                dirs.append(Node(child))
-            elif child.suffix == '.FCStd':
-                files.append(Node(child))
-        return sorted(dirs, key=lambda x: x.plain_name) \
-            + sorted(files, key=lambda x: x.plain_name)
-
-    @cached_property
-    def plain_name(self) -> str:
-        ''' Used for search and sorting. '''
-        return self.path.with_suffix('').name.casefold()
+                node = Node(child, self)
+                if node.children:  # recursive call + filter out empty dirs
+                    dirs.append(node)
+            elif child.suffix.lower() == '.fcstd':
+                files.append(Node(child, self))
+        return sorted(dirs, key=lambda x: x.name.casefold()) \
+            + sorted(files, key=lambda x: x.name.casefold())
