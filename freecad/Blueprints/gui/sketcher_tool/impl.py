@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 class State:
     rotation: bool
     equal_named: bool
-    hide_unnamed: bool
     repl_expr: ExprReplacer
 
 
@@ -53,20 +52,17 @@ class BlueprintSketcherTool(SketcherTool):
 
         self.rotation = rotation
 
-        equal_named = QtWidgets.QCheckBox('Equal named constraints (J)')
+        equal_named = QtWidgets.QCheckBox('Create equal-constraints (J)')
         equal_named.setToolTip(
-            'Create equal-constraints (named constraints only)')
+            'Treat all named constraints as equal.\n'
+            'Newly inserted copies will depend on the previous copy.')
         # Icon.freecad('constraints/Constraint_EqualLength.svg'))
         equal_named.setIcon(Icon.res('tool-equal-named.svg'))
         self.equal_named = equal_named
         if not inserter.detected.constraints.has_named:
             equal_named.setEnabled(False)
-            equal_named.setToolTip('No named constraints detected.')
-
-        hide_unnamed = QtWidgets.QCheckBox('Hide unnamed constraints (U)')
-        hide_unnamed.setToolTip('Only show named constraints in Sketcher')
-        hide_unnamed.setIcon(Icon.freecad('TreeItemInvisible.svg'))
-        self.hide_unnamed = hide_unnamed
+            equal_named.setToolTip(
+                'Disabled: Blueprint does not contain any named constraints.')
 
         form, self.expr_fields = make_form_fields(inserter.detected.expr, dst)
 
@@ -76,7 +72,6 @@ class BlueprintSketcherTool(SketcherTool):
             layout.addSpacerItem(QtWidgets.QSpacerItem(0, 12))
         layout.addWidget(rotation)
         layout.addWidget(equal_named)
-        layout.addWidget(hide_unnamed)
         layout.addLayout(fileinfo)
 
     def stop(self) -> None:
@@ -89,8 +84,6 @@ class BlueprintSketcherTool(SketcherTool):
             self.rotation.toggle()
         elif letter == 'J':
             self.equal_named.toggle()
-        elif letter == 'U':
-            self.hide_unnamed.toggle()
         else:
             return False
         return True
@@ -99,7 +92,6 @@ class BlueprintSketcherTool(SketcherTool):
         return State(
             rotation=self.rotation.isChecked(),
             equal_named=self.equal_named.isChecked(),
-            hide_unnamed=self.hide_unnamed.isChecked(),
             repl_expr=ExprReplacer(self.expr_fields, self.inserter.current),
         )
 

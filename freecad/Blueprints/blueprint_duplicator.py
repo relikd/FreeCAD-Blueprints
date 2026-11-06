@@ -32,8 +32,6 @@ class BlueprintDuplicator:
         After import, run `removeAxesAlignment` to allow blueprint rotation.
         This depends heavily on the quality of the source sketch.
         Please avoid `DistanceX` and `DistanceY` constraints.
-    hideUnnamed:
-        If enabled, set virtual space for all constraints except named ones.
     namedEquals:
         Dictionary with `{original-name: first-copy-name}` (or empty).
         If provided, subsequent copies will create equals-constraints on the
@@ -43,7 +41,6 @@ class BlueprintDuplicator:
     placement: 'Vector|None'
     constrainTo: 'GeoRef|None'
     allowRotate: bool
-    hideUnnamed: bool
     namedEquals: 'NamedEquals'  # use empty dict to ignore
     externalExpressions: 'ExprReplacer'
     detected: 'DetectedStats'
@@ -52,7 +49,7 @@ class BlueprintDuplicator:
         ''' Copy a sketch from one document to another. '''
         # where newly created geo ids start
         # used to group everything which was created by this process
-        geoid_0, cid_0 = dst.GeometryCount, dst.ConstraintCount
+        geoid_0, _cid_0 = dst.GeometryCount, dst.ConstraintCount
 
         # check if sketch contains references on any of the axes
         # override original axis (if necessary) to allow translation
@@ -64,25 +61,10 @@ class BlueprintDuplicator:
         _copy_constraints(src, dst, shifter)
         _copy_expressions(src, dst, shifter, self.externalExpressions)
 
-        # TODO: don't hide equal-names constraints
-        # - If `allowRotate`, then `hideUnnamed`:
-        #   all cid's in `name_to_id` will be invalid.
-        # - If `hideUnnamed`, then `allowRotate`:
-        #   the latter will create new constraints, which are not hidden.
-        # - There is no reliable way to get a cid before-after mapping.
-        #   Constraint names can't be edited after committing `addConstraint`.
-        #   And we really don't want to create unnecessary names.
-
         if self.allowRotate:
             # this changes existing constraints, be careful with cid references
             # `_constrain_origin` is unaffected but `name_to_id` may invalidate
             dst.removeAxesAlignment(list(range(geoid_0, dst.GeometryCount)))
-
-        if self.hideUnnamed:
-            # before `_constrain_origin` to keep that constraint visible
-            dst.setVirtualSpace([
-                i for i in range(cid_0, dst.ConstraintCount)
-                if not dst.Constraints[i].Name], True)
 
         # solve at the end should be sufficient as we dont manipulate geometry
         dst.solve()
