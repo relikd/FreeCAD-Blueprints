@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
     from FreeCAD import Document
+    from .blueprint_duplicator import NamedEquals
 
 
 _SESSIONS: list['BlueprintInserter'] = []
@@ -56,7 +57,7 @@ class BlueprintInserter:
 
         self.current = current
         self.blueprint = blueprint
-        self.prev_state = {}
+        self.prev_state: NamedEquals = {}
         self.detected = DetectedStats(blueprint)
 
         # indicate insertion mode by showing cursor icon

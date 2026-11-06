@@ -13,6 +13,8 @@ if TYPE_CHECKING:
     from FreeCADGui import SelectionObject, _View3DInventor, _View3DEventInfo
     from Sketcher import SketchObject as Sketch
 
+__all__ = ['UserSelection']
+
 
 class MouseClickListener:
     ''' Monitor mouse clicks and report selected geometry in `on_click`. '''

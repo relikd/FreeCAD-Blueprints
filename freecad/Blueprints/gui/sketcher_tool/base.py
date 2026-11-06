@@ -87,9 +87,10 @@ def task_tool_container() -> 'QtWidgets.QWidget|None':
     if dock := mw.findChild(QtWidgets.QWidget, 'Tasks'):
         # Note: the dock contains a QWidget with the same name
         # the tools are nested within both, so this is future proof
-        for ch in dock.findChildren(QtWidgets.QWidget):
-            if ch.metaObject().className() == 'SketcherGui::TaskSketcherTool':
-                return ch
+        for widget in dock.findChildren(QtWidgets.QWidget):
+            cls = str(widget.metaObject().className())
+            if cls == 'SketcherGui::TaskSketcherTool':
+                return widget
     return None
 
 

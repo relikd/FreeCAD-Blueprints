@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from Sketcher import SketchObject as Sketch
 
+__all__ = ['ReferencedAxis']
+
 
 @dataclass
 class DetectedStats:

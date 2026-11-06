@@ -15,6 +15,8 @@ if TYPE_CHECKING:  # switch between "PySide6" (dev) and "PySide" (dist)
 else:
     from PySide import QtCore, QtGui, QtWidgets
 
+__all__ = ['QtCore', 'QtGui', 'QtWidgets']
+
 
 class Icon:
     @staticmethod
