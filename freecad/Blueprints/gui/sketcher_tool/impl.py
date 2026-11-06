@@ -64,6 +64,19 @@ class BlueprintSketcherTool(SketcherTool):
             equal_named.setToolTip(
                 'Disabled: Blueprint does not contain any named constraints.')
 
+        eval_expr = QtWidgets.QCheckBox('Evaluate expressions (U)')
+        eval_expr.setToolTip(
+            'Replace all expressions with static values.\n'
+            'User-provided expressions are not affected.\n'
+            'This improves performance (less computations) but reduces '
+            'editability.')
+        eval_expr.setIcon(Icon.freecad('bound-expression-unset.svg'))
+        self.eval_expr = eval_expr
+        if not inserter.detected.constraints.has_expr:
+            eval_expr.setEnabled(False)
+            eval_expr.setToolTip(
+                'Disabled: Blueprint does not contain any expressions.')
+
         form, self.expr_fields = make_form_fields(inserter.detected.expr, dst)
 
         layout = QtWidgets.QVBoxLayout(self)
@@ -72,6 +85,7 @@ class BlueprintSketcherTool(SketcherTool):
             layout.addSpacerItem(QtWidgets.QSpacerItem(0, 12))
         layout.addWidget(rotation)
         layout.addWidget(equal_named)
+        layout.addWidget(eval_expr)
         layout.addLayout(fileinfo)
 
     def stop(self) -> None:
@@ -83,7 +97,11 @@ class BlueprintSketcherTool(SketcherTool):
         if letter == 'M':
             self.rotation.toggle()
         elif letter == 'J':
-            self.equal_named.toggle()
+            if self.inserter.detected.constraints.has_named:
+                self.equal_named.toggle()
+        elif letter == 'U':
+            if self.inserter.detected.constraints.has_expr:
+                self.eval_expr.toggle()
         else:
             return False
         return True
@@ -92,7 +110,8 @@ class BlueprintSketcherTool(SketcherTool):
         return State(
             rotation=self.rotation.isChecked(),
             equal_named=self.equal_named.isChecked(),
-            repl_expr=ExprReplacer(self.expr_fields, self.inserter.current),
+            repl_expr=ExprReplacer(self.expr_fields, self.inserter.current,
+                                   resolve=self.eval_expr.isChecked()),
         )
 
     def on_edit_sketch(self) -> None:

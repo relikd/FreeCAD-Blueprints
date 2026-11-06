@@ -23,10 +23,12 @@ def _validate(sketch: 'Sketch') -> None:
 @dataclass
 class DetectedConstraints:
     has_named: bool
+    has_expr: bool
 
 
 def detect_constraints(sketch: 'Sketch') -> DetectedConstraints:
     _validate(sketch)
     return DetectedConstraints(
         has_named=any(x.Name for x in sketch.Constraints),
+        has_expr=bool(sketch.ExpressionEngine),
     )

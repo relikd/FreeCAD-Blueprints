@@ -267,12 +267,11 @@ def _copy_expressions(
         if field.startswith(('Constraints[', '.Constraints.')):
             new_name = shiftr.reindex(field)
             # first reindex, then replace external expressions
-            is_fullmatch, new_expr = repl_expr.apply(shiftr.reindex(expr_str))
+            resolve, new_expr = repl_expr.apply(shiftr.reindex(expr_str))
             dst.setExpression(new_name, new_expr)
-            if is_fullmatch:
+            if resolve:
                 # Even though we reset it immediately after setting it,
                 # the computed value is persisted as non-computed value.
-                # TODO: add an option to allow that for all computed values
                 dst.setExpression(new_name, None)
         else:
             Notify.Log.err(f'Unhandled expr variant: "{field}". '

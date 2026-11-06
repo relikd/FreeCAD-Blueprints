@@ -17,8 +17,11 @@ class Val(NamedTuple):
 
 
 class ExprReplacer(dict[str, Val]):
-    def __init__(self, fields: list['UserExprField'], dst: 'Sketch') -> None:
+    def __init__(
+        self, fields: list['UserExprField'], dst: 'Sketch', *, resolve: bool,
+    ) -> None:
         '''Read back user provided values (either expression or raw value).'''
+        self.__resolve = resolve
         if fields:
             engine = dict(dst.ExpressionEngine)
             for x in fields:
@@ -34,10 +37,10 @@ class ExprReplacer(dict[str, Val]):
         AND the user-provided expression is a plain value.
         '''
         if not self:
-            return False, expr
+            return self.__resolve, expr
         if fullmatch := self.get(expr):
             return not fullmatch.is_expr, fullmatch.value
-        return False, rx_var_xpath.sub(lambda x, with_end=expr + ' ':
+        return self.__resolve, rx_var_xpath.sub(lambda x, with_end=expr + ' ':
             repl.value if (repl := self.get(x.group())) is not None
             and with_end[x.end()] != '(' else x.group(),
             expr)
