@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ...logic.expressions import make_form_fields, ExprReplacer
-from ..qt import QtWidgets, Icon, ElidedButton, OpenFileLocationAction
+from ..qt import QtCore, QtWidgets, Icon, ElidedButton, OpenFileLocationAction
+from ..thumbnail import sketch_thumbnail
 from .base import SketcherTool
 
 from typing import TYPE_CHECKING
@@ -77,6 +78,10 @@ class BlueprintSketcherTool(SketcherTool):
             eval_expr.setToolTip(
                 'Disabled: Blueprint does not contain any expressions.')
 
+        img_preview = QtWidgets.QLabel('Preview:')
+        img_preview.setPixmap(sketch_thumbnail(src, 512, 256))
+        img_preview.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+
         form, self.expr_fields = make_form_fields(inserter.detected.expr, dst)
 
         layout = QtWidgets.QVBoxLayout(self)
@@ -87,6 +92,7 @@ class BlueprintSketcherTool(SketcherTool):
         layout.addWidget(equal_named)
         layout.addWidget(eval_expr)
         layout.addLayout(fileinfo)
+        layout.addWidget(img_preview)
 
     def stop(self) -> None:
         for field in self.expr_fields:
