@@ -15,7 +15,7 @@ GAP: Final = (8, 4)
 
 
 class EntryView(QtWidgets.QStyledItemDelegate):
-    def __init__(self, parent: 'QtWidgets.QListView') -> None:
+    def __init__(self, parent: 'QtWidgets.QListView'):
         super().__init__(parent)
         self.view = parent
         self.cache = PixmapCache()

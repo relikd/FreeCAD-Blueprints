@@ -26,7 +26,7 @@ class UserExprField:
     bind_key: str
     field: QtWidgets.QWidget
 
-    def __init__(self, expref: 'DetectedExpr', index: int) -> None:
+    def __init__(self, expref: 'DetectedExpr', index: int):
         self.key = expref.key
         self.type_id = expref.type_id
         self.bind_key = PRFX + str(index)

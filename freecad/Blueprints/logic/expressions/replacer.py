@@ -19,7 +19,7 @@ class Val(NamedTuple):
 class ExprReplacer(dict[str, Val]):
     def __init__(
         self, fields: list['UserExprField'], dst: 'Sketch', *, resolve: bool,
-    ) -> None:
+    ):
         '''Read back user provided values (either expression or raw value).'''
         self.__resolve = resolve
         if fields:

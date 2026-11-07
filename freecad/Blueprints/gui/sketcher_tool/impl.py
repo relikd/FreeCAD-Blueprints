@@ -22,7 +22,7 @@ class BlueprintSketcherTool(SketcherTool):
     TITLE = 'Blueprint Parameters'
     ICON = Icon.res('toolbar.svg')
 
-    def __init__(self, inserter: 'BlueprintInserter') -> None:
+    def __init__(self, inserter: 'BlueprintInserter'):
         super().__init__()
         self.inserter = inserter
         src, dst = inserter.blueprint, inserter.current

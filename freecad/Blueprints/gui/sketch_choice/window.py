@@ -5,7 +5,7 @@ from .list_view import ListView
 
 
 class Window(QtWidgets.QDialog):
-    def __init__(self, choices: list[DataItem]) -> None:
+    def __init__(self, choices: list[DataItem]):
         super().__init__()
 
         self.setWindowTitle('Select item')

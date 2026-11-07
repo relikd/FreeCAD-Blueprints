@@ -21,7 +21,7 @@ class DetectedStats:
     constraints: DetectedConstraints
     expr: list[DetectedExpr]
 
-    def __init__(self, sketch: 'Sketch') -> None:
+    def __init__(self, sketch: 'Sketch'):
         self.axis = detect_axis(sketch)
         self.constraints = detect_constraints(sketch)
         self.expr = detect_external(sketch)

@@ -49,7 +49,7 @@ class Icon:
 class OpenFileLocationAction(QtGui.QAction):
     '''`path_fn` takes either static path or function returning path.'''
 
-    def __init__(self, path_fn: 'PathResolvable') -> None:
+    def __init__(self, path_fn: 'PathResolvable'):
         if sys.platform == 'darwin':
             super().__init__('Reveal in Finder')
             self.setStatusTip('Reveals the current file location in Finder')
@@ -106,7 +106,7 @@ class SyncedCheckbox(QtWidgets.QCheckBox):
     ''' Checkbox state is loaded from & synced back to user settings. '''
     on_change = QtCore.Signal(bool)
 
-    def __init__(self, label: str, *, pref: str) -> None:
+    def __init__(self, label: str, *, pref: str):
         super().__init__(label)
         self.setChecked(Settings.getBool(pref))
 
@@ -129,7 +129,7 @@ class SearchBar(QtWidgets.QLineEdit):
         | QtCore.Qt.KeyboardModifier.MetaModifier
     )
 
-    def __init__(self, parent: 'QtWidgets.QDialog', placeholder: str) -> None:
+    def __init__(self, parent: 'QtWidgets.QDialog', placeholder: str):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
 
@@ -152,8 +152,7 @@ class SearchBar(QtWidgets.QLineEdit):
 
 class ElidedButton(QtWidgets.QPushButton):
     ''' Button that automatically resizes to trim excessive text. '''
-    def __init__(self, text: str, parent: 'QtWidgets.QWidget|None' = None) \
-            -> None:
+    def __init__(self, text: str, parent: 'QtWidgets.QWidget|None' = None):
         super().__init__(text, parent)
         self._full_text: str = text
         self._update_elided_text()
@@ -180,7 +179,7 @@ class DirChooser(QtWidgets.QWidget):
     ''' `QLineEdit` with button to choose a filesystem directory. '''
     changed = QtCore.Signal()
 
-    def __init__(self, initial: str = '', *, btnReveal: bool = False) -> None:
+    def __init__(self, initial: str = '', *, btnReveal: bool = False):
         super().__init__()
 
         txt = QtWidgets.QLineEdit(initial)

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class ListView(QtWidgets.QListView):
     validated = QtCore.Signal(int)
 
-    def __init__(self, items: list['DataItem']) -> None:
+    def __init__(self, items: list['DataItem']):
         super().__init__()
 
         proxy = ListFilter(ListModel(items))
@@ -62,7 +62,7 @@ class ListView(QtWidgets.QListView):
 #################################################
 
 class ListModel(QtCore.QAbstractListModel):
-    def __init__(self, data: list['DataItem']) -> None:
+    def __init__(self, data: list['DataItem']):
         super().__init__()
         self.rows = data
 

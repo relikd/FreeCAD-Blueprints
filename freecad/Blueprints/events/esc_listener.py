@@ -19,7 +19,7 @@ class EscListener(QtCore.QObject):
     Intercept ESC key and forward to `on_esc` callback.
     Return `True` to stop event propagation (aka. prevent other ESC triggers).
     '''
-    def __init__(self, on_esc: Callable[[], bool]) -> None:
+    def __init__(self, on_esc: Callable[[], bool]):
         super().__init__()
         app = QtWidgets.QApplication.instance()
         if not app:

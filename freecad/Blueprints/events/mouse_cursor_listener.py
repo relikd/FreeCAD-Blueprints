@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class MouseCursorListener(QtCore.QObject):
     ''' Temporarily change mouse cursor to blueprint insert mode. '''
-    def __init__(self, view: '_View3DInventor') -> None:
+    def __init__(self, view: '_View3DInventor'):
         super().__init__()
         _DelayedCursorReset.clear()
         self.view: QtWidgets.QGraphicsView = view.graphicsView()

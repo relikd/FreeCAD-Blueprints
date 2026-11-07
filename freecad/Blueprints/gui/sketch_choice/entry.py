@@ -17,7 +17,7 @@ class DataItem:
     tooltip: str
     thumbnail: PixmapFactory
 
-    def __init__(self, args: tuple[int, 'Sketch']) -> None:
+    def __init__(self, args: tuple[int, 'Sketch']):
         self.index, sk = args
         self.title = sk.Label
         self.desc = str(sk.getPropertyByName('desc', 0))

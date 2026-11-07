@@ -11,9 +11,7 @@ if TYPE_CHECKING:
 
 class HotkeyListener(QtCore.QObject):
     ''' Register single-key (A-Z) hotkey listener for the sketcher tools. '''
-    def __init__(
-        self, view: '_View3DInventor', onKey: Callable[[str], bool],
-    ) -> None:
+    def __init__(self, view: '_View3DInventor', onKey: Callable[[str], bool]):
         '''
         `onKey` is called with a single letter "A" - "Z".
         Return `True` to consume the event.

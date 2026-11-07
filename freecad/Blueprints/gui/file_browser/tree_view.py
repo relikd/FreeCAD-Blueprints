@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 class TreeView(QtWidgets.QTreeView):
     validated = QtCore.Signal(int)
 
-    def __init__(self, root_dir: 'Path') -> None:
+    def __init__(self, root_dir: 'Path'):
         super().__init__()
         self.setModel(TreeFilter(TreeModel(Node(root_dir, None), self), self))
         self.setHeaderHidden(True)

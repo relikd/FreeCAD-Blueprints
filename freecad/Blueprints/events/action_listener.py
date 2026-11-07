@@ -16,7 +16,7 @@ class ActionListener(QtCore.QObject):
     Listen for any action / tool change.
     Triggers `on_action` after the fact (cursor already changed to new tool).
     '''
-    def __init__(self, on_action: Callable[[], None]) -> None:
+    def __init__(self, on_action: Callable[[], None]):
         super().__init__()
         self.callback = on_action
         self.actions: list[QtGui.QAction] = []

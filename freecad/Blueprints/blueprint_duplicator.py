@@ -153,7 +153,7 @@ class IdShifter:
         axis: ArtificialAxis | None,
         equals: 'NamedEquals',
         shouldEquals: bool,  # noqa: FBT001
-    ) -> None:
+    ):
         self.geoid_start = target.GeometryCount
         self.cid_start = target.ConstraintCount
         self.shouldEquals = shouldEquals

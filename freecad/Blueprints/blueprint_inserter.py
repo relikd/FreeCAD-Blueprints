@@ -37,7 +37,7 @@ class BlueprintInserter:
         for prev in _SESSIONS:
             prev.close(keepOpen=prev.blueprint.Document == ignored)
 
-    def __init__(self, current: 'Sketch', blueprint: 'Sketch') -> None:
+    def __init__(self, current: 'Sketch', blueprint: 'Sketch'):
         doc = FreeCADGui.ActiveDocument
         if not doc:
             raise RuntimeError('No active document')
