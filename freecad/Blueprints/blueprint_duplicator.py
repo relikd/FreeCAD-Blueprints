@@ -32,6 +32,8 @@ class BlueprintDuplicator:
         After import, run `removeAxesAlignment` to allow blueprint rotation.
         This depends heavily on the quality of the source sketch.
         Please avoid `DistanceX` and `DistanceY` constraints.
+    shouldEquals:
+        Whether or not future copies should bind to this instance.
     namedEquals:
         Dictionary with `{original-name: first-copy-name}` (or empty).
         If provided, subsequent copies will create equals-constraints on the
@@ -41,6 +43,7 @@ class BlueprintDuplicator:
     placement: 'Vector|None'
     constrainTo: 'GeoRef|None'
     allowRotate: bool
+    shouldEquals: bool
     namedEquals: 'NamedEquals'  # use empty dict to ignore
     externalExpressions: 'ExprReplacer'
     detected: 'DetectedStats'
@@ -56,7 +59,7 @@ class BlueprintDuplicator:
         axis = _createArtificialAxis(dst, self.placement, self.detected.axis)
 
         # after (potential) artificial axis but before copying geometry!
-        shifter = IdShifter(dst, axis, self.namedEquals)
+        shifter = IdShifter(dst, axis, self.namedEquals, self.shouldEquals)
         _copy_geometry(src, dst, self.placement)
         _copy_constraints(src, dst, shifter)
         _copy_expressions(src, dst, shifter, self.externalExpressions)
@@ -149,9 +152,11 @@ class IdShifter:
         target: 'Sketch',
         axis: ArtificialAxis | None,
         equals: 'NamedEquals',
+        shouldEquals: bool,  # noqa: FBT001
     ) -> None:
         self.geoid_start = target.GeometryCount
         self.cid_start = target.ConstraintCount
+        self.shouldEquals = shouldEquals
         self._existing_names = {x.Name for x in target.Constraints} - {''}
         self.name_to_name = {}
         self.name_to_id = {}
@@ -194,6 +199,10 @@ class IdShifter:
     def shift_name(self, index: int, name: str, *, is_driving: bool) -> str:
         ''' Auto-increment constraint name and update `prev_state`. '''
         if name:
+            if not self.shouldEquals:
+                # remove all named constraints
+                self.name_to_id[name] = self.cid_start + index
+                return ''
             if self.is_first_copy or not is_driving:
                 new_name = self._next_name(name)
                 self.named_equals[name] = new_name
@@ -279,9 +288,10 @@ def _copy_expressions(
 
     # create (or overwrite) expression for all named expressions
     # set "equals" expression on first-copy constraint (by name)
-    for name, idx in shiftr.name_to_id.items():
-        dst.setExpression(f'Constraints[{idx}]',  # newly created after reindex
-                          '.Constraints.' + shiftr.name_to_name[name])
+    if shiftr.shouldEquals:
+        for name, idx in shiftr.name_to_id.items():
+            dst.setExpression(f'Constraints[{idx}]',  # newly created after reindex
+                              '.Constraints.' + shiftr.name_to_name[name])
 
 
 def _constrain_origin(dst: 'Sketch', origin: GeoRef, toTarget: GeoRef) -> None:

@@ -131,6 +131,7 @@ class BlueprintInserter:
         duplicator = BlueprintDuplicator(
             sel.vec, sel.geo,
             allowRotate=options.rotation,
+            shouldEquals=options.equal_named,
             namedEquals=self.prev_state,
             externalExpressions=options.repl_expr,
             detected=self.detected,
