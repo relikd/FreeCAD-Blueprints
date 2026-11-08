@@ -90,3 +90,11 @@ def default_props(*doc_types: str) -> list[set[str]]:
 
     # cache results so we don't create new documents on each blueprint load
     return [_DEFAULT_PROPS_CACHE[x] for x in doc_types]
+
+
+def readable_length(value: float) -> str:
+    ''' Convert float value (40.1) to length with unit ("40.10 mm"). '''
+    import FreeCAD  # noqa: PLC0415
+    return FreeCAD.Units.Quantity(  # type: ignore[attr-defined]
+        value, FreeCAD.Units.Length,
+    ).getUserPreferred()[0]

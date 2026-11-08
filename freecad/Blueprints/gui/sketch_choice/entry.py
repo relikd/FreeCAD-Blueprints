@@ -22,4 +22,4 @@ class DataItem:
         self.title = sk.Label
         self.desc = str(sk.getPropertyByName('desc', 0))
         self.tooltip = sk.getDocumentationOfProperty('desc')
-        self.thumbnail = lambda: sketch_thumbnail(sk)
+        self.thumbnail = lambda: sketch_thumbnail(sk)[0]

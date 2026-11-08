@@ -12,14 +12,14 @@ if TYPE_CHECKING:
 
 def sketch_thumbnail(
     sketch: 'Sketch', width: int = 128, height: int = 128, padding: int = 5,
-) -> 'QtGui.QPixmap':
+) -> tuple[QtGui.QPixmap, float, float]:
     shape = sketch.Shape
 
     pixmap = QtGui.QPixmap(width, height)
     pixmap.fill(QtGui.QColor(*Settings.View.background_color()))
 
     if shape.isNull() or not shape.Edges:
-        return pixmap
+        return pixmap, -1, -1
 
     # Convert all edges to polylines
     polylines = []
@@ -34,7 +34,7 @@ def sketch_thumbnail(
             points.extend(polyline)
 
     if not points:
-        return pixmap
+        return pixmap, -1, -1
 
     # Sketch bounding box
     min_x = min(x for x, _ in points)
@@ -85,4 +85,4 @@ def sketch_thumbnail(
 
     painter.end()
     pixmap.setDevicePixelRatio(2)
-    return pixmap
+    return pixmap, model_width, model_height

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from ...helper.utils import readable_length
 from ...logic.expressions import make_form_fields, ExprReplacer
 from ..qt import QtCore, QtWidgets, Icon, ElidedButton, OpenFileLocationAction
 from ..thumbnail import sketch_thumbnail
@@ -81,9 +82,14 @@ class BlueprintSketcherTool(SketcherTool):
             eval_expr.setToolTip(
                 'Disabled: Blueprint does not contain any expressions.')
 
-        img_preview = QtWidgets.QLabel('Preview:')
-        img_preview.setPixmap(sketch_thumbnail(src, 512, 256))
+        thumbnail, dim_w, dim_h = sketch_thumbnail(src, 512, 256)
+        img_preview = QtWidgets.QLabel()
+        img_preview.setPixmap(thumbnail)
         img_preview.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+
+        dimensions = QtWidgets.QLabel(
+            f'({readable_length(dim_w)} x {readable_length(dim_h)})')
+        dimensions.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         form, self.expr_fields = make_form_fields(inserter.detected.expr, dst)
 
@@ -96,6 +102,7 @@ class BlueprintSketcherTool(SketcherTool):
         layout.addWidget(rotation)
         layout.addLayout(fileinfo)
         layout.addWidget(img_preview)
+        layout.addWidget(dimensions)
 
     def stop(self) -> None:
         for field in self.expr_fields:
