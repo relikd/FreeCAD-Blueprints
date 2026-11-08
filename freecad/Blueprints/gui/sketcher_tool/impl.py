@@ -46,7 +46,7 @@ class BlueprintSketcherTool(SketcherTool):
         fileinfo.addWidget(file_combo, 1)  # use full width
 
         # insert options
-        rotation = QtWidgets.QCheckBox('Remove Axes Alignment (M)')
+        rotation = QtWidgets.QCheckBox('Remove Axes Alignment (U)')
         rotation.setToolTip('Allow rotation of object after insert.')
         rotation.setIcon(
             Icon.freecad('tools/Sketcher_RemoveAxesAlignment.svg'))
@@ -65,7 +65,7 @@ class BlueprintSketcherTool(SketcherTool):
             equal_named.setToolTip(
                 'Disabled: Blueprint does not contain any named constraints.')
 
-        eval_expr = QtWidgets.QCheckBox('Evaluate expressions (U)')
+        eval_expr = QtWidgets.QCheckBox('Evaluate expressions (M)')
         eval_expr.setToolTip(
             'Replace all expressions with static values.\n'
             'User-provided expressions are not affected.\n'
@@ -88,9 +88,9 @@ class BlueprintSketcherTool(SketcherTool):
         if form.rowCount() > 0:
             layout.addLayout(form)
             layout.addSpacerItem(QtWidgets.QSpacerItem(0, 12))
-        layout.addWidget(rotation)
-        layout.addWidget(equal_named)
         layout.addWidget(eval_expr)
+        layout.addWidget(equal_named)
+        layout.addWidget(rotation)
         layout.addLayout(fileinfo)
         layout.addWidget(img_preview)
 
@@ -101,13 +101,13 @@ class BlueprintSketcherTool(SketcherTool):
 
     def on_hotkey(self, letter: str) -> bool:
         if letter == 'M':
-            self.rotation.toggle()
+            if self.inserter.detected.constraints.has_expr:
+                self.eval_expr.toggle()
         elif letter == 'J':
             if self.inserter.detected.constraints.has_named:
                 self.equal_named.toggle()
         elif letter == 'U':
-            if self.inserter.detected.constraints.has_expr:
-                self.eval_expr.toggle()
+            self.rotation.toggle()
         else:
             return False
         return True
