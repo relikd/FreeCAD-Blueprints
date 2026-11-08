@@ -22,7 +22,11 @@ def chooseBlueprint(prev_doc: 'Document|None') -> 'Sketch|None':
     e.g., `FreeCAD.closeDocument(sketch.Document.Name)`
     '''
     if path := open_blueprint_browser():
-        return _loadSketchAtPath(str(path), prev_doc)
+        if sketch := _loadSketchAtPath(str(path), prev_doc):
+            # cleanup old backup files (they are created on blueprint editing)
+            for bak in path.parent.glob(path.stem + '.*.FCBak'):
+                bak.unlink(missing_ok=True)
+            return sketch
     return None
 
 
