@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from ..helper.utils import RES_ROOT, open_in_file_manager
-from ..helper.settings import Settings
+from ..helper.settings import Settings, as_hex3
 
 from typing import TYPE_CHECKING, Callable, Literal, overload
 
@@ -37,7 +37,11 @@ class Icon:
     @staticmethod
     def blueprint_cursor() -> QtGui.QCursor:
         ''' Mouse cursor shown while inserting blueprint. '''
-        return QtGui.QCursor(Icon.res('cursor.svg'), 8, 8)
+        path = Path(RES_ROOT / 'icons' / 'cursor.svg')
+        color = as_hex3(Settings.View.cursor_crosshair_color()).encode('utf8')
+        img = QtGui.QImage.fromData(path.read_bytes().replace(b'#888', color))
+        img.setDevicePixelRatio(2)
+        return QtGui.QCursor(QtGui.QPixmap.fromImage(img), 8, 8)
 
     @staticmethod
     def folder() -> QtGui.QIcon:

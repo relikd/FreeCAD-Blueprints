@@ -1,5 +1,5 @@
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-<g id="crosshair" stroke="#fff" stroke-linecap="round" stroke-width="2.5">
+<g id="crosshair" stroke="#888" stroke-linecap="round" stroke-width="2.5">
  <path d="m16 3v9m0 8v9m-13-13h9m8 0h9"/>
 </g>
 <g transform="translate(24,24)scale(0.6)">

@@ -9,6 +9,7 @@ from .utils import default_database_dir
 if TYPE_CHECKING:
     from FreeCAD import ParameterGrp
     from ..gui.qt import QtWidgets
+    Color = tuple[int, int, int, int]
 
 
 class Settings:
@@ -55,14 +56,14 @@ class Settings:
 
     class View:
         @staticmethod
-        def background_color() -> tuple[int, int, int, int]:
+        def background_color() -> 'Color':
             ''' Background color of 3D view. '''
-            val = _cfg('View').GetUnsigned('BackgroundColor')
-            r = (val >> 24) & 0xff
-            g = (val >> 16) & 0xff
-            b = (val >> 8) & 0xff
-            a = val & 0xff
-            return r, g, b, a
+            return as_color(_cfg('View').GetUnsigned('BackgroundColor'))
+
+        @staticmethod
+        def cursor_crosshair_color() -> 'Color':
+            ''' Color of the crosshair (e.g. Sketcher insert geometry). '''
+            return as_color(_cfg('View').GetUnsigned('CursorCrosshairColor'))
 
     class Units:
         @staticmethod
@@ -78,3 +79,17 @@ class Settings:
 def _cfg(name: str = 'Mod/Blueprints') -> 'ParameterGrp':
     import FreeCAD  # noqa: PLC0415
     return FreeCAD.ParamGet('User parameter:BaseApp/Preferences/' + name)
+
+
+def as_color(val: int) -> 'Color':
+    ''' Convert `Unsigned` to 4-tuple color value `(r, g, b, a)`. '''
+    r = (val >> 24) & 0xff
+    g = (val >> 16) & 0xff
+    b = (val >> 8) & 0xff
+    a = val & 0xff
+    return r, g, b, a
+
+
+def as_hex3(val: 'Color') -> str:
+    ''' Returns CSS hex color "#AABBCC" (ignores transparency). '''
+    return '#{:02X}{:02X}{:02X}'.format(*val)  # ignores transparency
