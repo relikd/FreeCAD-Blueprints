@@ -65,6 +65,11 @@ class Settings:
             ''' Color of the crosshair (e.g. Sketcher insert geometry). '''
             return as_color(_cfg('View').GetUnsigned('CursorCrosshairColor'))
 
+        @staticmethod
+        def line_color() -> 'Color':
+            ''' Normal geometry line color. '''
+            return as_color(_cfg('View').GetUnsigned('CreateLineColor'))
+
     class Units:
         @staticmethod
         def decimals() -> int:

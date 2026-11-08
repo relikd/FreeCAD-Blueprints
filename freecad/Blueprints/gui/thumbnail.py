@@ -1,6 +1,7 @@
 '''
 Draw thumbnail from sketch geometry.
 '''
+from ..helper.settings import Settings
 from .qt import QtCore, QtGui
 
 from typing import TYPE_CHECKING
@@ -15,7 +16,7 @@ def sketch_thumbnail(
     shape = sketch.Shape
 
     pixmap = QtGui.QPixmap(width, height)
-    pixmap.fill(QtGui.QColor(35, 35, 35))
+    pixmap.fill(QtGui.QColor(*Settings.View.background_color()))
 
     if shape.isNull() or not shape.Edges:
         return pixmap
@@ -60,7 +61,7 @@ def sketch_thumbnail(
     painter = QtGui.QPainter(pixmap)
     painter.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
 
-    pen = QtGui.QPen(QtGui.QColor(235, 235, 235))
+    pen = QtGui.QPen(QtGui.QColor(*Settings.View.line_color()))
     pen.setWidthF(1.5)
     painter.setPen(pen)
     painter.setBrush(QtCore.Qt.BrushStyle.NoBrush)
