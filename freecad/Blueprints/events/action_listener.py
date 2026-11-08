@@ -5,10 +5,11 @@ Exit current tool if another is selected.
 import FreeCADGui
 
 from ..gui.qt import QtGui, QtCore
+from ..register_commands import CMD_NAME
 
 from typing import Callable
 
-IGNORED = {'Std_Undo', 'Std_Redo', 'Blueprints_Add'}
+IGNORED = {'Std_Undo', 'Std_Redo', CMD_NAME}
 
 
 class ActionListener(QtCore.QObject):
