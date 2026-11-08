@@ -47,7 +47,10 @@ class BlueprintSketcherTool(SketcherTool):
 
         # insert options
         rotation = QtWidgets.QCheckBox('Remove Axes Alignment (U)')
-        rotation.setToolTip('Allow rotation of object after insert.')
+        rotation.setToolTip(
+            'Allow rotation of object after insert.\n'
+            'This may not always behave as expected.\n'
+            '(performs the same action as the original Sketcher Tool).')
         rotation.setIcon(
             Icon.freecad('tools/Sketcher_RemoveAxesAlignment.svg'))
 
