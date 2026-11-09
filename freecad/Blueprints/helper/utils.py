@@ -95,6 +95,7 @@ def default_props(*doc_types: str) -> list[set[str]]:
 def readable_length(value: float) -> str:
     ''' Convert float value (40.1) to length with unit ("40.10 mm"). '''
     import FreeCAD  # noqa: PLC0415
+    # TODO: remove type-ignore once types include Quantity
     return FreeCAD.Units.Quantity(  # type: ignore[attr-defined]
         value, FreeCAD.Units.Length,
     ).getUserPreferred()[0]
