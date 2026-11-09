@@ -93,10 +93,7 @@ class MouseClickListener:
     def _selection(self, x: int, y: int) -> UserSelection:
         ''' Try to detect user selected geometry as best as possible. '''
         selected = UserSelection.get_current()
-        # ideally return user-selected geometry (only if geometry was clicked)
-        if selected.vec:
-            return selected
-        # if geometry selected without manual click (no `PickedPoints`),
+        # user did select geometry
         if by_geo := selected.from_geometry(self.sketch):
             return by_geo
         # if that fails, fallback to clicked coordinates

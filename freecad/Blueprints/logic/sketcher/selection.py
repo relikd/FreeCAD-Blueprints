@@ -37,10 +37,15 @@ class UserSelection(NamedTuple):
 
     def from_geometry(self, sketch: 'Sketch') -> 'UserSelection|None':
         ''' Try to determine point by geometry itself (only for start/end). '''
+        # first, try to resolve the point from the geometry itself
         if self.geo and self.geo.pos != PointPos.none:
             vec = sketch.getPoint(self.geo.geoid, self.geo.pos)
             if vec.x != 0 or vec.y != 0:
                 return UserSelection(vec, self.geo)
+        # if that fails, try to use `PickedPoints`
+        if self.vec:
+            vec = sketch.Placement.inverse().multVec(self.vec)
+            return UserSelection(vec, self.geo)
         return None
 
     @staticmethod
