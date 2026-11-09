@@ -7,7 +7,7 @@ import FreeCAD
 import FreeCADGui
 
 from ...gui.qt import QtWidgets
-from .widgets import property_to_widget
+from .widgets import FieldOrValue, property_to_widget
 
 from typing import TYPE_CHECKING
 
@@ -24,13 +24,13 @@ class UserExprField:
     key: str
     type_id: str
     bind_key: str
-    field: QtWidgets.QWidget
+    field_or_value: FieldOrValue
 
     def __init__(self, expref: 'DetectedExpr', index: int):
         self.key = expref.key
         self.type_id = expref.type_id
         self.bind_key = PRFX + str(index)
-        self.field = property_to_widget(expref.obj, expref.prop)
+        self.field_or_value = property_to_widget(expref.obj, expref.prop)
 
     def meta_tooltip(self) -> str:
         return f'type: {self.type_id}\nkey: {self.key}'
@@ -41,7 +41,8 @@ class UserExprField:
         The binding needs to be on the sketch itself, or else, we wont be
         able to reference constraints and VarSets from this document.
         '''
-        if not _can_bind(self.field):
+        field = self.field_or_value[0]
+        if not field or not _can_bind(field):
             return
         dst.addProperty(
             self.type_id, self.bind_key, group='_BlueprintsTransientProps',
@@ -49,7 +50,7 @@ class UserExprField:
             attr=FreeCAD.PropertyType.Prop_Transient,
             hidden=True)
         # TODO: remove type-ignore once types include ExpressionBinding
-        FreeCADGui.ExpressionBinding(self.field).bind(dst, self.bind_key)  # type: ignore[attr-defined]
+        FreeCADGui.ExpressionBinding(field).bind(dst, self.bind_key)  # type: ignore[attr-defined]
 
     def cleanup(self, dst: 'Sketch') -> None:
         ''' Remove all transient properties from sketch. '''
@@ -57,7 +58,8 @@ class UserExprField:
         # is still active. (happens if the widget is present in some view)
         # Thus we first try to remove all form fields with ExpressionBinding.
         try:
-            self.field.setParent(None)
+            if field := self.field_or_value[0]:
+                field.setParent(None)
         except RuntimeError:
             # ignore Qt object already deleted (Cmd+Q while editing sketch)
             pass
@@ -72,12 +74,14 @@ def make_form_fields(detected_expr: 'list[DetectedExpr]', dst: 'Sketch') \
     for i, expref in enumerate(detected_expr, _prev_idx(dst) + 1):
         item = UserExprField(expref, i)
         rv.append(item)
-        # label
-        lbl = QtWidgets.QLabel(expref.display_name)
-        lbl.setToolTip(
-            f'{item.meta_tooltip()}\n\n{item.field.toolTip()}'.rstrip())
-        form.addRow(lbl, item.field)
-        item.install_binding(dst)  # adds (fx) button
+
+        if field := item.field_or_value[0]:
+            # label
+            lbl = QtWidgets.QLabel(expref.display_name)
+            lbl.setToolTip(
+                f'{item.meta_tooltip()}\n\n{field.toolTip()}'.rstrip())
+            form.addRow(lbl, field)
+            item.install_binding(dst)  # adds (fx) button
     return form, rv
 
 

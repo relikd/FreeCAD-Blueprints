@@ -31,11 +31,16 @@ _QUANTITY_TYPES = {
     'App::PropertyTemperature',
 }
 
+FieldOrValue = tuple[QtWidgets.QWidget, None] | tuple[None, list[float]]
+
 
 # see https://github.com/FreeCAD/FreeCAD/blob/088f49373da7309845471e5286b2f6deb69ec8d7/src/Mod/BIM/ArchComponent.py#L2844-L2853
-def property_to_widget(obj: 'DocObj', prop: str) -> QtWidgets.QWidget:
+def property_to_widget(obj: 'DocObj', prop: str) -> FieldOrValue:
     ''' Convert single property field to form field. '''
     type_id = obj.getTypeIdOfProperty(prop)
+
+    if type_id in ('App::PropertyIntegerList', 'App::PropertyFloatList'):
+        return None, getattr(obj, prop)
 
     w: QtWidgets.QWidget
 
@@ -86,11 +91,11 @@ def property_to_widget(obj: 'DocObj', prop: str) -> QtWidgets.QWidget:
         w.setToolTip(
             f'No editor support for type: {type_id}. If you have a use-case '
             'for this type, make a feature request on GitHub.')
-        return w
+        return w, None
 
     # copy tooltip from property
     w.setToolTip(obj.getDocumentationOfProperty(prop).strip())
-    return w
+    return w, None
 
 
 #################################################
