@@ -29,6 +29,6 @@ class DetectedConstraints:
 def detect_constraints(sketch: 'Sketch') -> DetectedConstraints:
     _validate(sketch)
     return DetectedConstraints(
-        has_named=any(x.Name for x in sketch.Constraints),
+        has_named=any(x.Name and x.Driving for x in sketch.Constraints),
         has_expr=bool(sketch.ExpressionEngine),
     )
