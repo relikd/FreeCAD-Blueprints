@@ -3,7 +3,6 @@ Detect usage of constraints.
 '''
 from dataclasses import dataclass
 
-from ...helper.notify import Notify
 from ..sketcher.constraints import Constr
 from ..sketcher.georef import GeoId
 
@@ -14,10 +13,15 @@ if TYPE_CHECKING:
 
 
 def _validate(sketch: 'Sketch') -> None:
-    ''' Ensure sketch is well-structured to avoid common mistakes. '''
+    '''
+    Ensure sketch is well-structured to avoid common mistakes.
+
+    raises
+    ValueError: on prohibited constraints
+    '''
     if Constr.any(sketch.Constraints, GeoId.isExt):
-        Notify.warn('External reference found',
-                    'Blueprints cannot have references on external geometry.')
+        raise ValueError(
+            'Blueprints cannot have references on external geometry.')
 
 
 @dataclass

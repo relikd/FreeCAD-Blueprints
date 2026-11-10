@@ -49,16 +49,18 @@ class BlueprintInserter:
         # Not necessary for `.FullyConstrained` (if performance need arises).
         # ... but also nice to enforce properly defined blueprints.
         if (err := blueprint.solve()) != 0:
-            raise RuntimeError(
+            raise ValueError(
                 f'Sketch solver error: {err}. '
                 'This is an issue with the blueprint template file.')
+
+        # before any other because it may raise Exception
+        self.detected = DetectedStats(blueprint)
 
         _SESSIONS.append(self)
 
         self.current = current
         self.blueprint = blueprint
         self.prev_state: NamedEquals = {}
-        self.detected = DetectedStats(blueprint)
 
         # indicate insertion mode by showing cursor icon
         self.cursor_monitor = MouseCursorListener(view)

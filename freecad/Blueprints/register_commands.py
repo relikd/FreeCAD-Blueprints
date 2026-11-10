@@ -51,7 +51,10 @@ class Blueprints_Insert:
             BlueprintInserter.kill_previous(ignored=blueprint.Document)
             # cancel any current geometry or constraint tool
             FreeCADGui.runCommand('Sketcher_StopOperation', 0)
-            BlueprintInserter(currentSketch, blueprint)
+            try:
+                BlueprintInserter(currentSketch, blueprint)
+            except ValueError as e:
+                Notify.warn('Error loading blueprint', str(e))
 
 
 def getActiveSketchInEditMode() -> 'Sketch|None':
