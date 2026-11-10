@@ -69,6 +69,14 @@ class ListModel(QtCore.QAbstractListModel):
     def rowCount(self, parent: 'QIndex|None' = None) -> int:
         return 0 if parent and parent.isValid() else len(self.rows)
 
+    def flags(self, index: 'QIndex') -> QtCore.Qt.ItemFlag:
+        flags = super().flags(index)
+        if not self.rows[index.row()].valid:
+            flags &= ~(
+                QtCore.Qt.ItemFlag.ItemIsEnabled
+                | QtCore.Qt.ItemFlag.ItemIsSelectable)
+        return flags
+
     def data(
         self, index: 'QIndex', role: int = QtCore.Qt.ItemDataRole.UserRole,
     ) -> 'DataItem|str|None':

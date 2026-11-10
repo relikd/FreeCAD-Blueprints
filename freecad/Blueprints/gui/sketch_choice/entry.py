@@ -15,9 +15,11 @@ class DataItem:
     title: str
     desc: str
     tooltip: str
+    valid: bool
     thumbnail: PixmapFactory
 
     def __init__(self, args: tuple[int, 'Sketch']):
+        self.valid = True
         self.index, sk = args
         self.title = sk.Label
         try:
@@ -26,4 +28,10 @@ class DataItem:
         except AttributeError:  # TODO: replace with Base.PropertyError
             self.desc = ''
             self.tooltip = ''
+        if sk.ExternalGeometry:
+            self.valid = False
+            self.title = '[INVALID] ' + self.title
+            self.desc = self.tooltip = (
+                'Blueprints cannot have references on external geometry.'
+            )
         self.thumbnail = lambda: sketch_thumbnail(sk)[0]

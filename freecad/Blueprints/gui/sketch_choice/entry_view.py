@@ -65,6 +65,8 @@ class EntryView(QtWidgets.QStyledItemDelegate):
         rect = option.rect.adjusted(MARGIN, MARGIN, -MARGIN, -MARGIN)
         x, y, w, h = rect.left(), rect.top(), rect.right(), rect.bottom()
 
+        painter.save()
+
         # thumbnail
         if pixmap := self.cache.get(item.index):
             painter.drawPixmap(x, y, pixmap)
@@ -72,6 +74,9 @@ class EntryView(QtWidgets.QStyledItemDelegate):
             self.cache.add(item.index, item.thumbnail)
             painter.fillRect(
                 QtCore.QRect(x, y, *THUMB_SIZE), QtGui.QColor(35, 35, 35))
+
+        if not item.valid:
+            painter.setPen(QtGui.QColor(240, 0, 0))
 
         # title
         x += THUMB_SIZE[0] + GAP[0]
@@ -87,3 +92,5 @@ class EntryView(QtWidgets.QStyledItemDelegate):
             QtCore.QRect(x, y, w - x, h - y),
             QtCore.Qt.TextFlag.TextWordWrap,
             item.desc)
+
+        painter.restore()
