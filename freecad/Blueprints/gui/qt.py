@@ -82,28 +82,20 @@ class OpenFileLocationAction(QtGui.QAction):
             open_in_file_manager(rv)
 
 
-class QuickGui:
-    @staticmethod
-    def buttons(
-        parent: QtWidgets.QDialog,
-        *,
-        abort: bool = False,
-        cancel: bool = False,
-    ) -> tuple[QtWidgets.QDialogButtonBox, QtWidgets.QPushButton]:
-        '''
-        Creates a default buttons box. With at least an "Ok" button.
-        Returns: `(box, ok-button)`.
-        '''
-        flags = QtWidgets.QDialogButtonBox.StandardButton.Ok
-        if abort:
-            flags |= QtWidgets.QDialogButtonBox.StandardButton.Abort
-        if cancel:
-            flags |= QtWidgets.QDialogButtonBox.StandardButton.Cancel
+class Buttons(QtWidgets.QDialogButtonBox):
+    def __init__(self, parent: QtWidgets.QDialog):
+        super().__init__()
+        self.accepted.connect(parent.accept)
+        self.rejected.connect(parent.reject)
 
-        rv = QtWidgets.QDialogButtonBox(flags)
-        rv.accepted.connect(parent.accept)
-        rv.rejected.connect(parent.reject)
-        return rv, rv.button(QtWidgets.QDialogButtonBox.StandardButton.Ok)
+    def add_ok(self) -> QtWidgets.QPushButton:
+        return self.addButton(QtWidgets.QDialogButtonBox.StandardButton.Ok)
+
+    def add_abort(self) -> QtWidgets.QPushButton:
+        return self.addButton(QtWidgets.QDialogButtonBox.StandardButton.Abort)
+
+    def add_cancel(self) -> QtWidgets.QPushButton:
+        return self.addButton(QtWidgets.QDialogButtonBox.StandardButton.Cancel)
 
 
 class SyncedCheckbox(QtWidgets.QCheckBox):

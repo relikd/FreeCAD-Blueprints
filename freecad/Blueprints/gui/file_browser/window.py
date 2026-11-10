@@ -1,5 +1,5 @@
 from ...helper.settings import Settings
-from ..qt import QtCore, QtWidgets, OpenFileLocationAction, QuickGui, SearchBar
+from ..qt import QtCore, QtWidgets, OpenFileLocationAction, Buttons, SearchBar
 from .tree_view import TreeView
 
 from typing import TYPE_CHECKING
@@ -27,7 +27,9 @@ class FileBrowser(QtWidgets.QDialog):
         OpenFileLocationAction(self.on_open_fm).addTo(tree)
 
         # Buttons
-        buttons, self.accept_button = QuickGui.buttons(self, cancel=True)
+        buttons = Buttons(self)
+        btn_ok = buttons.add_ok()
+        buttons.add_cancel()
 
         # Layout
         layout = QtWidgets.QVBoxLayout(self)
@@ -39,11 +41,11 @@ class FileBrowser(QtWidgets.QDialog):
         search_bar.textChanged.connect(tree.apply_filter)
         search_bar.on_up_down.connect(self.on_up_down)
         tree.doubleClicked.connect(self.accept)
-        tree.validated.connect(self.accept_button.setEnabled)
+        tree.validated.connect(btn_ok.setEnabled)
         self.finished.connect(self.save_settings)
 
         # apply initial expanded state + hide empty dirs
-        # triggers `on_selection_changed`, thus `self.accept_button` must exist
+        # triggers `on_selection_changed`, thus `btn_ok` must exist
         tree.apply_filter('')
 
     def save_settings(self, _: int) -> None:

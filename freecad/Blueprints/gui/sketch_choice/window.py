@@ -1,5 +1,5 @@
 from ...helper.settings import Settings
-from ..qt import QtWidgets, QuickGui, SearchBar, SyncedCheckbox
+from ..qt import QtWidgets, Buttons, SearchBar, SyncedCheckbox
 from .entry import DataItem
 from .list_view import ListView
 
@@ -20,7 +20,9 @@ class Window(QtWidgets.QDialog):
         self.list_view = list_view
 
         # Buttons
-        buttons, self.accept_button = QuickGui.buttons(self, abort=True)
+        buttons = Buttons(self)
+        btn_ok = buttons.add_ok()
+        buttons.add_abort()
 
         search = QtWidgets.QHBoxLayout()
         search.addWidget(search_bar)
@@ -35,7 +37,7 @@ class Window(QtWidgets.QDialog):
         search_bar.on_up_down.connect(self.on_up_down)
         chk.on_change.connect(lambda x: list_view.filter.setOptions(desc=x))
         list_view.doubleClicked.connect(self.accept)
-        list_view.validated.connect(self.accept_button.setEnabled)
+        list_view.validated.connect(btn_ok.setEnabled)
         self.finished.connect(self.save_settings)
 
         # initial state
