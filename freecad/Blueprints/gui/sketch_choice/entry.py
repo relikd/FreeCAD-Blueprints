@@ -20,6 +20,10 @@ class DataItem:
     def __init__(self, args: tuple[int, 'Sketch']):
         self.index, sk = args
         self.title = sk.Label
-        self.desc = str(sk.getPropertyByName('desc', 0))
-        self.tooltip = sk.getDocumentationOfProperty('desc')
+        try:
+            self.desc = str(sk.getPropertyByName('desc'))
+            self.tooltip = sk.getDocumentationOfProperty('desc')
+        except AttributeError:  # TODO: replace with Base.PropertyError
+            self.desc = ''
+            self.tooltip = ''
         self.thumbnail = lambda: sketch_thumbnail(sk)[0]
