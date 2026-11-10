@@ -9,7 +9,10 @@ from ..register_commands import CMD_NAME
 
 from typing import Callable
 
-IGNORED = {'Std_Undo', 'Std_Redo', CMD_NAME}
+IGNORED = {
+    'Part_SelectFilter', 'Sketcher_ViewSketch', 'Sketcher_ViewSection',
+    CMD_NAME,
+}
 
 
 class ActionListener(QtCore.QObject):
@@ -22,8 +25,11 @@ class ActionListener(QtCore.QObject):
         self.callback = on_action
         self.actions: list[QtGui.QAction] = []
 
+        # https://github.com/FreeCAD/FreeCAD/blob/main/src/Gui/Workbench.cpp
+        # Hopefully including all "Std_" wont do any damage.
+        # This also includes "Std_Macro_0" etc.
         filtered = {x for x in available_commands()
-                    if not x.startswith('Std_View')} - IGNORED
+                    if not x.startswith('Std_')} - IGNORED
 
         for action in available_actions():
             if action.objectName() in filtered:
