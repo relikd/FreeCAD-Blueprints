@@ -47,6 +47,7 @@ class ExprReplacer(dict[str, Val]):
         Returns `(True, _)` if the source expression is just a single variable
         AND the user-provided expression is a plain value.
         '''
+        # TODO: recursively ignore resolve for named-equals
         # no replacements, return immediately with expression unchanged
         if not self:
             return self.__resolve, expr
