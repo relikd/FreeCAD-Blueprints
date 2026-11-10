@@ -97,6 +97,10 @@ class Buttons(QtWidgets.QDialogButtonBox):
     def add_cancel(self) -> QtWidgets.QPushButton:
         return self.addButton(QtWidgets.QDialogButtonBox.StandardButton.Cancel)
 
+    def add_action(self, title: str) -> QtWidgets.QPushButton:
+        return self.addButton(
+            title, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
+
 
 class SyncedCheckbox(QtWidgets.QCheckBox):
     ''' Checkbox state is loaded from & synced back to user settings. '''

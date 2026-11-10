@@ -1,16 +1,15 @@
+from pathlib import Path
+
 from ...helper.settings import Settings
 from ..qt import QtCore, QtWidgets, OpenFileLocationAction, Buttons, SearchBar
 from .tree_view import TreeView
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
 
 class FileBrowser(QtWidgets.QDialog):
-    def __init__(self, root_dir: 'Path'):
+    def __init__(self, root_dir: Path):
         super().__init__()
+
+        self.custom_opened: Path | None = None
 
         self.setWindowTitle('Choose Blueprint')
         self.resize(*Settings.getWinSize('FileBrowser', (400, 550)))
@@ -28,8 +27,10 @@ class FileBrowser(QtWidgets.QDialog):
 
         # Buttons
         buttons = Buttons(self)
-        btn_ok = buttons.add_ok()
         buttons.add_cancel()
+        btn_ok = buttons.add_ok()
+        btn_open = buttons.add_action('Open ...')
+        btn_open.setShortcut('Ctrl+O')  # TODO: allow trigger from search_bar
 
         # Layout
         layout = QtWidgets.QVBoxLayout(self)
@@ -42,6 +43,7 @@ class FileBrowser(QtWidgets.QDialog):
         search_bar.on_up_down.connect(self.on_up_down)
         tree.doubleClicked.connect(self.accept)
         tree.validated.connect(btn_ok.setEnabled)
+        btn_open.clicked.connect(self.on_file_open)
         self.finished.connect(self.save_settings)
 
         # apply initial expanded state + hide empty dirs
@@ -64,6 +66,15 @@ class FileBrowser(QtWidgets.QDialog):
         ''' Get path for "Open in file manager". '''
         return self.tree.get_selected(allowDir=True)
 
+    def on_file_open(self) -> None:
+        ''' User manually selected a FreeCAD file via `Open ...` menu. '''
+        ans, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, 'Open Blueprint', dir=Settings.General.save_path(),
+            filter='FreeCAD document (*.FCStd)')
+        if ans:
+            self.custom_opened = Path(ans)
+            super().accept()
+
     def accept(self) -> None:
         ''' Ensure double-click has a valid target. '''
         if self.tree.get_selected():
@@ -71,4 +82,4 @@ class FileBrowser(QtWidgets.QDialog):
 
     def get_selected(self) -> 'Path|None':
         ''' Return selection if Node is a file item. '''
-        return self.tree.get_selected()
+        return self.custom_opened or self.tree.get_selected()

@@ -54,6 +54,11 @@ class Settings:
     def setWinSize(name: str, win: 'QtWidgets.QDialog') -> None:
         _cfg().SetString('winSize_' + name, f'{win.width()}x{win.height()}')
 
+    class General:
+        @staticmethod
+        def save_path() -> str:
+            return _cfg('General').GetString('FileOpenSavePath')
+
     class View:
         @staticmethod
         def background_color() -> 'Color':
