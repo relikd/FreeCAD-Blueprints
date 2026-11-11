@@ -21,7 +21,7 @@
 
 	<icon>freecad/Blueprints/resources/icons/logo.svg</icon>
 	<url branch="main" type="repository">https://github.com/relikd/FreeCAD-Blueprints</url>
-	<url type="readme">https://raw.githubusercontent.com/relikd/FreeCAD-Blueprints/refs/heads/main/freecad/Blueprints/resources/documents/Overview.md</url>
+	<url type="readme">https://raw.githubusercontent.com/relikd/FreeCAD-Blueprints/refs/heads/main/doc/README-Intro.md</url>
 
 	<content>
 		<other/>
