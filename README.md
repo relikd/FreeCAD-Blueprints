@@ -1,63 +1,53 @@
 # Blueprints - FreeCAD Addon for rapid sketching
 
-> [!IMPORTANT]
-> This addon is still in development.
-> The basic functionaly it there, but it still needs lots of usability tweaking.
----
+Quickly insert complex sketches with a single click – variables & expressions included.
+Reduce repetetive work by loading pre-defined sketches.
 
-Reduce repetetive work by loading pre-defined sketches from community collections.
+For example, add a USB-C port (hole) to your electronics case in seconds:
 
-For example, add a USB-C port (hole) to your electronics case in seconds. 
+<video width="100%" style="max-width: 1024px" src="doc/basic-insert.mp4" controls></video>
 
-[![import sketch](doc/load-sketch.gif)](doc/load-sketch.mp4)
+https://github.com/user-attachments/assets/05db9d5e-0224-46a2-8365-9c46397f8b67
 
-### Features
+
+## Features
 
 **Define your own sketches** with tools you are already familiar with: FreeCAD.
-Blueprints are just sketches – loaded from another FreeCAD file.
+Blueprints are sketches loaded from another FreeCAD file.
 You can fully constraint your sketch relative to the axis origin (e.g., distance to PCB).
-All constraints are copied to the new destination (incl. computed and named constraints).
-The blueprint copy uses an artificial axis to allow translation and rotation around the origin.
+All constraints and expressions are copied to the new destination.
 
 If a blueprint contains only one sketch, it is loaded right away.
 If the file contains multiple sketches, a popup will ask you which sketch to load (second window in the video above).
 
-#### Tips for creators
 
-- Switch to the `Part` workbench to create a sketch without a body.
-- Add a descriptive `desc` parameter to your sketch if you use multiple sketches per document.
-- Fully-constraint your sketch to the origin.
-  Underconstraints needs to be resolved each time someone inserts a blueprint.
-- Remember, users can still edit the sketch after it is imported.
-- External references are prohibited
-- Before publishing, try to load your design and verify everything works as expected.
+## Example Usage
+
+See also [Creators Guide](doc/README-Creators.md).
 
 
-### Roadmap
+### Insert multiple copies
 
-- [ ] Documentation
-	- [ ] instructions on how to create blueprints
-	- [ ] documentation / description for the addon store
-	- [ ] proper dev documentation (this Readme++)
-- [x] Improve blueprint insert workflow
-	- [x] cursor icon for blueprint placement
-	- [x] where to show "allow rotation" option/checkbox?
-	- [ ] check if there are other expressions than in-sketch refs
-	- [x] thumbnail preview of the sketch prior to import
-	- [x] multi-copy equals constraint (change all copies with a single value)
-- [x] Allow user to (easily) create new blueprints
-	- [x] shortcut to create new document in user-collection
-	- [x] create empty sketch via `Part` (avoids a body object)
-	- [ ] usage instructions (`desc` property, fully constrain to origin, ...)
-- [x] Preferences page
-	- [x] manage location of user-collection
-	- [ ] manage subscriptions (with update button?, we need versions)
-- [x] Allow bp-creators to define variables?
-	- [x] either by Sketch properties or via `VarSet` (-> both)
-	- [x] how are multiple instances handled? (-> direct evaluation)
-- [ ] General improvements
-	- [ ] Qt string translations
-- [ ] Community managed content
-	- [ ] add mechanism to subscribe to community managed blueprints
-	- [ ] either via git (not installed everywhere) or bundled with addon (less updates)
-	- [ ] At the very least, have a markdown with links to great sources
+<video width="100%" style="max-width: 1024px" src="doc/multi-insert.mp4" controls></video>
+
+https://github.com/user-attachments/assets/8e3b9420-0521-4c40-9158-be71a763becb
+
+
+### Create new blueprint from selection
+
+<video width="100%" style="max-width: 1024px" src="doc/create-from-selection.mp4" controls></video>
+
+https://github.com/user-attachments/assets/493449f3-9845-4fc3-ae09-eef69309767e
+
+
+### Co-dependent copies
+
+<video width="100%" style="max-width: 1024px" src="doc/named-equals.mp4" controls></video>
+
+https://github.com/user-attachments/assets/e0067a6b-6e72-4161-9450-a4a240367cbf
+
+
+## Roadmap
+
+- [ ] Translations
+- [ ] Community managed content (subscribe to other users blueprints, e.g. git repo)
