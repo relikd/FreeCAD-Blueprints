@@ -3,3 +3,4 @@
 /doc/ export-ignore
 /pyproject.toml export-ignore
 /test/ export-ignore
+/Makefile export-ignore
