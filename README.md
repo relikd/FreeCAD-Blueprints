@@ -30,7 +30,7 @@ See also [Creators Guide](doc/README-Creators.md).
 
 <video width="100%" style="max-width: 1024px" src="doc/multi-insert.mp4" controls></video>
 
-https://github.com/user-attachments/assets/8e3b9420-0521-4c40-9158-be71a763becb
+https://github.com/user-attachments/assets/e0067a6b-6e72-4161-9450-a4a240367cbf
 
 
 ### Create new blueprint from selection
@@ -44,8 +44,7 @@ https://github.com/user-attachments/assets/493449f3-9845-4fc3-ae09-eef69309767e
 
 <video width="100%" style="max-width: 1024px" src="doc/named-equals.mp4" controls></video>
 
-https://github.com/user-attachments/assets/e0067a6b-6e72-4161-9450-a4a240367cbf
-
+https://github.com/user-attachments/assets/8e3b9420-0521-4c40-9158-be71a763becb
 
 ## Roadmap
 
